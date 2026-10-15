@@ -95,7 +95,7 @@ export default function SkillGapPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="p-3.5 px-6 rounded-2xl bg-scarlet-soft border border-scarlet/20 text-scarlet-dark text-xs font-bold shadow-clay-pill flex items-center justify-center gap-2"
+            className="p-3.5 px-6 rounded-xl bg-scarlet-soft border border-scarlet/20 text-scarlet-dark text-xs font-bold shadow-sm flex items-center justify-center gap-2"
           >
             <CheckCircle2 className="w-4 h-4 text-scarlet" />
             <span>{enrolledNotice}</span>
@@ -216,34 +216,34 @@ export default function SkillGapPage() {
           {gapData?.recommended_training.map((module, idx) => (
             <motion.div
               key={idx}
-              whileHover={{ y: -3 }}
-              className="clay-inset p-6 flex flex-col justify-between space-y-4"
+              whileHover={{ y: -2 }}
+              className="clay-inset p-5 rounded-xl flex flex-col justify-between space-y-4 h-full"
             >
-              <div>
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-scarlet/10 text-scarlet shadow-clay-pill">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-scarlet/10 text-scarlet border border-scarlet/20">
                     {module.skill}
                   </span>
-                  <span className="text-xs font-semibold text-charcoal-muted flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-scarlet" /> 4-6 Weeks
+                  <span className="text-xs font-semibold text-charcoal-muted flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-md border border-charcoal/5 shadow-xs">
+                    <Clock className="w-3.5 h-3.5 text-scarlet" /> 4-6 Weeks
                   </span>
                 </div>
 
-                <h3 className="font-bold text-base text-charcoal mt-3 leading-snug">
+                <h3 className="font-bold text-base text-charcoal leading-snug min-h-[44px] flex items-center">
                   {module.course}
                 </h3>
 
-                <div className="flex items-center gap-2 text-xs text-charcoal-muted font-medium mt-2">
+                <div className="flex items-center gap-2 text-xs text-charcoal-muted font-medium">
                   <span>Accreditation Provider:</span>
                   <span className="text-charcoal font-bold">{module.provider}</span>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-charcoal/10 flex items-center justify-between">
+              <div className="pt-3 border-t border-charcoal/10 flex items-center justify-between mt-auto">
                 <span className="text-xs font-bold text-scarlet">Enterprise License Ready</span>
                 <button
                   onClick={() => handleEnroll(module.course, module.skill)}
-                  className="clay-btn-primary px-4 py-1.5 text-xs font-bold flex items-center gap-1"
+                  className="clay-btn-primary px-4 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <span>Enroll Candidate</span>
                   <ExternalLink className="w-3 h-3" />

@@ -266,7 +266,7 @@ export default function TeamFormationPage() {
             initial={{ opacity: 0, y: -15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-4 px-6 rounded-3xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 text-xs md:text-sm font-bold shadow-clay-card flex items-center gap-3"
+            className="p-4 px-6 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs md:text-sm font-bold shadow-sm flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
               <CheckCheck className="w-5 h-5 stroke-[3]" />
@@ -589,16 +589,16 @@ export default function TeamFormationPage() {
                   <div
                     onMouseEnter={() => setHoveredCandidateId(cand.employee_id)}
                     onMouseLeave={() => setHoveredCandidateId(null)}
-                    className="mt-4 p-3 rounded-lg bg-ivory border border-charcoal/10 space-y-2 cursor-help"
+                    className="mt-4 p-3 rounded-xl bg-ivory border border-charcoal/10 space-y-2.5 cursor-help"
                     title="Hover to view exact points contribution out of 100"
                   >
-                    <div className="flex items-center justify-between text-[11px] font-bold text-charcoal-muted">
-                      <span>Score Contribution Breakdown</span>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-charcoal-muted pb-1 border-b border-charcoal/5">
+                      <span>Score Contribution</span>
                       <span className="text-scarlet font-mono font-black">{cand.match_score} / 100 pts</span>
                     </div>
 
-                    {/* Stacked Micro-Bars */}
-                    <div className="w-full h-2 rounded-full bg-charcoal/10 flex overflow-hidden">
+                    {/* Stacked Micro-Bars with ample margin */}
+                    <div className="w-full h-2.5 rounded-full bg-charcoal/10 flex overflow-hidden">
                       <div
                         className="bg-scarlet h-full transition-all duration-300"
                         style={{ width: `${(cand.skill_match_score * 0.5)}%` }}
@@ -616,31 +616,37 @@ export default function TeamFormationPage() {
                       ></div>
                     </div>
 
-                    {/* Explanatory Legend / Micro Stats */}
+                    {/* Explanatory Legend: Exp pts vs Tenure kept distinct */}
                     <div className="grid grid-cols-3 gap-1 pt-1 text-[10px]">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-scarlet shrink-0"></span>
                         <span className="text-charcoal-muted truncate">
-                          Skill: <strong className="text-charcoal">{(cand.skill_match_score * 0.5).toFixed(1)}p</strong>
+                          Skill: <strong className="text-charcoal">{(cand.skill_match_score * 0.5).toFixed(1)} pts</strong>
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-charcoal shrink-0"></span>
                         <span className="text-charcoal-muted truncate">
-                          Exp: <strong className="text-charcoal">{(cand.experience_score * 0.25).toFixed(1)}p</strong>
+                          Exp pts: <strong className="text-charcoal">{(cand.experience_score * 0.25).toFixed(1)}</strong>
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                         <span className="text-charcoal-muted truncate">
-                          Avail: <strong className="text-charcoal">{(cand.availability_score * 0.25).toFixed(1)}p</strong>
+                          Avail: <strong className="text-charcoal">{(cand.availability_score * 0.25).toFixed(1)} pts</strong>
                         </span>
                       </div>
                     </div>
 
+                    {/* Distinct Tenure readout to avoid confusion */}
+                    <div className="flex items-center justify-between text-[10px] text-charcoal/70 pt-1.5 border-t border-charcoal/5">
+                      <span>Tenure: <strong className="text-charcoal">{cand.experience_years} yrs</strong></span>
+                      <span>Capacity: <strong className="text-charcoal">{cand.utilization_pct}%</strong></span>
+                    </div>
+
                     {hoveredCandidateId === cand.employee_id && (
-                      <div className="text-[10px] text-charcoal/70 pt-1 border-t border-charcoal/5 leading-snug">
-                        {cand.skill_match_score}% of required skills matched • {cand.experience_years}y tenure • {cand.utilization_pct}% capacity
+                      <div className="text-[10px] text-charcoal/80 pt-1 border-t border-charcoal/5 leading-snug">
+                        {cand.skill_match_score}% of required skills matched • {cand.experience_years}y verified experience
                       </div>
                     )}
                   </div>

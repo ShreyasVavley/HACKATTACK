@@ -69,6 +69,13 @@ export default function WorkloadBalancingPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [roleFilter, setRoleFilter] = useState<string>("All");
   const [appliedNotice, setAppliedNotice] = useState<string | null>(null);
+  const [lastShift, setLastShift] = useState<{
+    fromId: number;
+    toId: number;
+    hours: number;
+    fromName: string;
+    toName: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchWorkloadData();
@@ -122,10 +129,16 @@ export default function WorkloadBalancingPage() {
         { method: "POST" }
       );
       if (res.ok) {
-        const data = await res.json();
         setAppliedNotice(
           `✓ Shift executed: Transferred ${item.suggested_hours_to_shift}h from ${item.from_employee_name} to ${item.to_employee_name}.`
         );
+        setLastShift({
+          fromId: item.from_employee_id,
+          toId: item.to_employee_id,
+          hours: item.suggested_hours_to_shift,
+          fromName: item.from_employee_name,
+          toName: item.to_employee_name,
+        });
         // Instantly refresh live workload stats and employee hours from SQLite
         await fetchWorkloadData();
         // Recalculate remaining shifts
@@ -134,7 +147,6 @@ export default function WorkloadBalancingPage() {
     } catch (err) {
       console.error("Failed to execute shift in DB:", err);
     }
-    setTimeout(() => setAppliedNotice(null), 5000);
   };
 
   const handleQuickRebalanceStaff = async (overloadedEmp: Employee) => {
@@ -168,13 +180,40 @@ export default function WorkloadBalancingPage() {
         setAppliedNotice(
           `✓ Rebalanced! Offloaded ${shiftHours}h from ${overloadedEmp.name} to ${target.name} (${target.role}).`
         );
+        setLastShift({
+          fromId: overloadedEmp.id,
+          toId: target.id,
+          hours: shiftHours,
+          fromName: overloadedEmp.name,
+          toName: target.name,
+        });
         await fetchWorkloadData();
         await handleGenerateShifts();
       }
     } catch (err) {
       console.error("Quick rebalance failed:", err);
     }
-    setTimeout(() => setAppliedNotice(null), 5000);
+  };
+
+  const handleUndoShift = async () => {
+    if (!lastShift) return;
+    try {
+      // Reverse the shift: from toId back to fromId
+      const res = await fetch(
+        `${API_BASE}/api/apply-shift?from_id=${lastShift.toId}&to_id=${lastShift.fromId}&hours=${lastShift.hours}`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        setAppliedNotice(
+          `↩ Undone! Returned ${lastShift.hours}h from ${lastShift.toName} back to ${lastShift.fromName}.`
+        );
+        setLastShift(null);
+        await fetchWorkloadData();
+        await handleGenerateShifts();
+      }
+    } catch (err) {
+      console.error("Undo failed:", err);
+    }
   };
 
   const filteredEmployees = employees.filter((emp) => {
@@ -188,17 +227,37 @@ export default function WorkloadBalancingPage() {
 
   return (
     <main className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
-      {/* Toast Notice */}
+      {/* Visual Feedback Toast & Undo Banner */}
       <AnimatePresence>
         {appliedNotice && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="p-3.5 px-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-clay-pill flex items-center justify-center gap-2"
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3.5 px-5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold shadow-sm flex items-center justify-between gap-4"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>{appliedNotice}</span>
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 stroke-[2.5]" />
+              <span>{appliedNotice}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {lastShift && (
+                <button
+                  onClick={handleUndoShift}
+                  className="px-2.5 py-1 rounded bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-[11px] shadow-xs transition-colors cursor-pointer"
+                  title="Reverse this workload shift immediately"
+                >
+                  Undo Shift
+                </button>
+              )}
+              <button
+                onClick={() => setAppliedNotice(null)}
+                className="text-emerald-700/60 hover:text-emerald-900 text-xs font-black px-1.5 py-0.5 rounded cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -311,7 +370,7 @@ export default function WorkloadBalancingPage() {
                     </span>
                   </div>
 
-                  <p className="text-xs font-medium text-charcoal mt-3 p-3 rounded-2xl bg-white shadow-clay-pill leading-relaxed">
+                  <p className="text-xs font-medium text-charcoal mt-3 p-3 rounded-xl bg-white border border-charcoal/5 shadow-xs leading-relaxed">
                     {item.impact_rationale}
                   </p>
 
