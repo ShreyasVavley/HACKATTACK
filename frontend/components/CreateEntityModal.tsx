@@ -11,7 +11,7 @@ interface CreateModalProps {
   onProjectCreated?: (newProjId?: number) => void;
 }
 
-const API_BASE = "http://127.0.0.1:8000";
+import { API_BASE } from "../lib/api";
 
 export default function CreateEntityModal({
   isOpen,

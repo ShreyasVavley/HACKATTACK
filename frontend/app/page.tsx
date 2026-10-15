@@ -64,7 +64,7 @@ interface WorkloadStats {
   underutilized_employees: Employee[];
 }
 
-const API_BASE = "http://127.0.0.1:8000";
+import { API_BASE } from "../lib/api";
 
 export default function OverviewHubPage() {
   const [stats, setStats] = useState<WorkloadStats | null>(null);
