@@ -8,34 +8,34 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Claymorphism Palette: Ivory, Charcoal Black, Scarlet Blue
+        // Theme: Ivory, Charcoal Black, Scarlet Red
         ivory: {
-          DEFAULT: '#F8F6F0',
+          DEFAULT: '#FAF8F5',
           50: '#FFFFFF',
-          100: '#FAF8F4',
-          200: '#F3EFE6',
-          300: '#EAE3D4',
-          400: '#DFD5C2',
-          card: '#FCFAF6',
+          100: '#FAF8F5',
+          200: '#F4EFEA',
+          300: '#EAE2D8',
+          400: '#DCD1C2',
+          card: '#FFFFFF',
         },
         charcoal: {
-          DEFAULT: '#14161C',
-          900: '#101217',
-          800: '#181B22',
-          700: '#232731',
-          600: '#343A48',
-          muted: '#626A7C',
+          DEFAULT: '#16171B',
+          900: '#111215',
+          800: '#181A20',
+          700: '#23262F',
+          600: '#353945',
+          muted: '#636878',
         },
         scarlet: {
-          DEFAULT: '#2563EB', // Vivid Scarlet Royal Blue
-          dark: '#1D4ED8',
-          light: '#3B82F6',
-          glow: '#60A5FA',
-          soft: '#EFF6FF',
+          DEFAULT: '#DC2626', // Vibrant Scarlet Red
+          dark: '#B91C1C',
+          light: '#EF4444',
+          glow: '#F87171',
+          soft: '#FEF2F2',
+          deep: '#991B1B',
         },
         clay: {
           emerald: '#10B981',
-          rose: '#F43F5E',
           amber: '#F59E0B',
           purple: '#8B5CF6',
         }
@@ -47,14 +47,13 @@ module.exports = {
         'clay-full': '9999px',
       },
       boxShadow: {
-        // Multi-layered 3D Soft Inflated Clay Shadows
-        'clay-card': '12px 16px 32px rgba(20, 22, 28, 0.08), -8px -8px 24px rgba(255, 255, 255, 0.95), inset 2px 2px 4px rgba(255, 255, 255, 0.8), inset -3px -3px 6px rgba(20, 22, 28, 0.05)',
-        'clay-card-hover': '16px 22px 38px rgba(20, 22, 28, 0.12), -10px -10px 28px rgba(255, 255, 255, 1), inset 2px 2px 4px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(20, 22, 28, 0.06)',
-        'clay-btn': '6px 8px 18px rgba(37, 99, 235, 0.35), -4px -4px 14px rgba(255, 255, 255, 0.8), inset 2px 2px 4px rgba(255, 255, 255, 0.4), inset -2px -2px 5px rgba(0, 0, 0, 0.25)',
-        'clay-btn-hover': '8px 12px 22px rgba(37, 99, 235, 0.45), -5px -5px 16px rgba(255, 255, 255, 0.9), inset 2px 2px 5px rgba(255, 255, 255, 0.5), inset -3px -3px 6px rgba(0, 0, 0, 0.3)',
-        'clay-btn-active': '2px 3px 8px rgba(37, 99, 235, 0.3), inset 3px 3px 6px rgba(0, 0, 0, 0.3), inset -2px -2px 4px rgba(255, 255, 255, 0.2)',
-        'clay-inset': 'inset 4px 4px 8px rgba(20, 22, 28, 0.07), inset -4px -4px 8px rgba(255, 255, 255, 0.9)',
-        'clay-pill': '4px 6px 14px rgba(20, 22, 28, 0.06), -3px -3px 10px rgba(255, 255, 255, 0.9), inset 1px 1px 2px rgba(255, 255, 255, 0.8), inset -1px -1px 3px rgba(20, 22, 28, 0.04)',
+        'clay-card': '12px 16px 32px rgba(22, 23, 27, 0.07), -8px -8px 24px rgba(255, 255, 255, 0.95), inset 2px 2px 4px rgba(255, 255, 255, 0.8), inset -3px -3px 6px rgba(22, 23, 27, 0.04)',
+        'clay-card-hover': '16px 22px 38px rgba(22, 23, 27, 0.11), -10px -10px 28px rgba(255, 255, 255, 1), inset 2px 2px 4px rgba(255, 255, 255, 0.9), inset -4px -4px 8px rgba(22, 23, 27, 0.05)',
+        'clay-btn': '6px 8px 18px rgba(220, 38, 38, 0.35), -4px -4px 14px rgba(255, 255, 255, 0.8), inset 2px 2px 4px rgba(255, 255, 255, 0.4), inset -2px -2px 5px rgba(0, 0, 0, 0.25)',
+        'clay-btn-hover': '8px 12px 22px rgba(220, 38, 38, 0.45), -5px -5px 16px rgba(255, 255, 255, 0.9), inset 2px 2px 5px rgba(255, 255, 255, 0.5), inset -3px -3px 6px rgba(0, 0, 0, 0.3)',
+        'clay-btn-active': '2px 3px 8px rgba(220, 38, 38, 0.3), inset 3px 3px 6px rgba(0, 0, 0, 0.3), inset -2px -2px 4px rgba(255, 255, 255, 0.2)',
+        'clay-inset': 'inset 4px 4px 8px rgba(22, 23, 27, 0.06), inset -4px -4px 8px rgba(255, 255, 255, 0.95)',
+        'clay-pill': '4px 6px 14px rgba(22, 23, 27, 0.05), -3px -3px 10px rgba(255, 255, 255, 0.9), inset 1px 1px 2px rgba(255, 255, 255, 0.8), inset -1px -1px 3px rgba(22, 23, 27, 0.03)',
       }
     },
   },
