@@ -291,7 +291,7 @@ export default function TeamFormationPage() {
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <p className="text-xs md:text-sm font-medium text-charcoal-muted">
-              AI-driven squad solver optimizing team skill coverage and availability.
+              Algorithmic squad solver optimizing team skill coverage and availability.
             </p>
             <button
               onClick={() => setMethodologyOpen(true)}

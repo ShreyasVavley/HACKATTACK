@@ -284,7 +284,7 @@ export default function WorkloadBalancingPage() {
             <div>
               <h2 className="text-xl font-black text-charcoal flex items-center gap-2">
                 <ArrowRightLeft className="w-5 h-5 text-scarlet" />
-                AI-Recommended Task Reallocation Directives
+                Automated Task Reallocation Directives
               </h2>
               <p className="text-xs font-semibold text-charcoal-muted mt-0.5">
                 Heuristic matches overloaded engineers with bench specialists with compatible domain skills.
