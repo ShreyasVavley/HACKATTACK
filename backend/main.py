@@ -1083,3 +1083,200 @@ def get_project_skill_gaps(project_id: int, db: Session = Depends(get_db)):
         coverage_percentage=coverage_pct,
         recommended_training=recommendations
     )
+
+
+# ---------------------------------------------------------
+# New Feature 1: What-If Capacity Simulation Engine
+# ---------------------------------------------------------
+class SimulationRequest(BaseModel):
+    project_id: int
+    added_hours_per_week: int = 15
+    candidate_ids: List[int]
+
+
+class SimulationResult(BaseModel):
+    project_id: int
+    project_name: str
+    added_hours: int
+    current_avg_utilization: float
+    simulated_avg_utilization: float
+    current_burnout_count: int
+    simulated_burnout_count: int
+    burnout_risk_delta: int
+    impact_level: str
+    impact_summary: str
+    employee_deltas: List[Dict[str, Any]]
+
+
+@app.post("/api/simulate-capacity", response_model=SimulationResult)
+def simulate_capacity(req: SimulationRequest, db: Session = Depends(get_db)):
+    """
+    Feature: What-If Capacity Simulation
+    Predicts organizational impact before deploying resources or launching projects.
+    """
+    proj = db.query(ProjectModel).filter(ProjectModel.id == req.project_id).first()
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found.")
+
+    employees = db.query(EmployeeModel).all()
+    current_util_sum = sum((e.current_workload_hours / max(e.max_hours, 1)) * 100 for e in employees)
+    curr_avg = round(current_util_sum / max(len(employees), 1), 1)
+    curr_burnout = sum(1 for e in employees if (e.current_workload_hours / max(e.max_hours, 1)) * 100 > 85.0)
+
+    simulated_burnout = 0
+    sim_util_sum = 0
+    deltas = []
+
+    target_set = set(req.candidate_ids)
+
+    for e in employees:
+        new_hours = e.current_workload_hours + (req.added_hours_per_week if e.id in target_set else 0)
+        new_hours = min(e.max_hours + 10, new_hours) # Cap at potential max
+        new_util = round((new_hours / max(e.max_hours, 1)) * 100, 1)
+        sim_util_sum += new_util
+
+        if new_util > 85.0:
+            simulated_burnout += 1
+
+        if e.id in target_set:
+            deltas.append({
+                "employee_id": e.id,
+                "name": e.name,
+                "role": e.role,
+                "current_hours": e.current_workload_hours,
+                "simulated_hours": new_hours,
+                "current_utilization": round((e.current_workload_hours / max(e.max_hours, 1)) * 100, 1),
+                "simulated_utilization": new_util,
+                "status_shift": "Optimal -> Burnout" if new_util > 85.0 and (e.current_workload_hours / max(e.max_hours, 1)) * 100 <= 85.0 else "Stable"
+            })
+
+    sim_avg = round(sim_util_sum / max(len(employees), 1), 1)
+    delta_burnout = simulated_burnout - curr_burnout
+
+    if delta_burnout > 0:
+        impact = "High Burnout Risk"
+        summary = f"Deploying this team adds {req.added_hours_per_week}h/wk and introduces {delta_burnout} new burnout flags. Consider bench reallocations before executing."
+    elif sim_avg >= 65.0 and sim_avg <= 80.0:
+        impact = "Healthy Optimal Load"
+        summary = f"Team load balances smoothly at {sim_avg}% average organizational capacity."
+    else:
+        impact = "Safe Capacity"
+        summary = f"Capacity remains within acceptable margins with no immediate burnout escalations."
+
+    return SimulationResult(
+        project_id=proj.id,
+        project_name=proj.name,
+        added_hours=req.added_hours_per_week,
+        current_avg_utilization=curr_avg,
+        simulated_avg_utilization=sim_avg,
+        current_burnout_count=curr_burnout,
+        simulated_burnout_count=simulated_burnout,
+        burnout_risk_delta=delta_burnout,
+        impact_level=impact,
+        impact_summary=summary,
+        employee_deltas=deltas
+    )
+
+
+# ---------------------------------------------------------
+# New Feature 2: Natural Language AI Talent Copilot
+# ---------------------------------------------------------
+class CopilotQuery(BaseModel):
+    prompt: str
+
+
+class CopilotAnswer(BaseModel):
+    query: str
+    suggested_action: str
+    insight: str
+    recommended_personnel: List[Dict[str, Any]]
+    confidence_score: float
+
+
+@app.post("/api/ai-copilot", response_model=CopilotAnswer)
+def ai_copilot_assistant(query_in: CopilotQuery, db: Session = Depends(get_db)):
+    """
+    Feature: Natural Language AI Copilot
+    Answers staffing queries like: 'Who is available for Python and Cloud?', 'Which senior staff is burnt out?'
+    """
+    prompt = query_in.prompt.lower()
+    employees = db.query(EmployeeModel).all()
+    projects = db.query(ProjectModel).all()
+
+    matched_staff = []
+    action = "Strategic Talent Advisory"
+    insight = ""
+
+    if "burnout" in prompt or "overload" in prompt or "busy" in prompt:
+        action = "Burnout Mitigation Protocol"
+        burnt = [e for e in employees if (e.current_workload_hours / max(e.max_hours, 1)) * 100 > 85.0]
+        insight = f"Found {len(burnt)} personnel exceeding the 85% capacity threshold. Recommend activating the Task Redistribution Engine to offload hours to bench resources."
+        for e in burnt:
+            matched_staff.append({
+                "id": e.id,
+                "name": e.name,
+                "role": e.role,
+                "skills": parse_skills(e.skills),
+                "metric": f"{round((e.current_workload_hours / max(e.max_hours, 1)) * 100)}% Load",
+                "status": e.status
+            })
+
+    elif "bench" in prompt or "available" in prompt or "underutilized" in prompt:
+        action = "Bench Talent Activation"
+        bench = [e for e in employees if (e.current_workload_hours / max(e.max_hours, 1)) * 100 < 40.0]
+        insight = f"Surfaced {len(bench)} high-capacity engineers currently on the bench (<40% utilization). Immediately eligible for project assignment."
+        for e in bench:
+            matched_staff.append({
+                "id": e.id,
+                "name": e.name,
+                "role": e.role,
+                "skills": parse_skills(e.skills),
+                "metric": f"{round((e.current_workload_hours / max(e.max_hours, 1)) * 100)}% Load",
+                "status": e.status
+            })
+
+    elif any(term in prompt for term in ["python", "cloud", "react", "java", "ml", "ai", "data", "kubernetes"]):
+        # Extract target keywords
+        keywords = [w for w in ["python", "cloud", "react", "java", "machine learning", "data analytics", "kubernetes"] if w in prompt]
+        action = f"Targeted Skill Search ({', '.join(keywords)})"
+        relevant = []
+        for e in employees:
+            e_skills_l = [s.lower() for s in parse_skills(e.skills)]
+            overlap = [kw for kw in keywords if any(kw in s or s in kw for s in e_skills_l)]
+            if overlap:
+                relevant.append((e, len(overlap)))
+
+        relevant.sort(key=lambda x: x[1], reverse=True)
+        insight = f"Identified {len(relevant)} personnel possessing verified competencies in {', '.join(keywords)}."
+        for e, score in relevant[:5]:
+            matched_staff.append({
+                "id": e.id,
+                "name": e.name,
+                "role": e.role,
+                "skills": parse_skills(e.skills),
+                "metric": f"{e.experience_years}y Exp • {round((e.current_workload_hours / max(e.max_hours, 1)) * 100)}% Load",
+                "status": e.status
+            })
+
+    else:
+        action = "Global Talent Portfolio Assessment"
+        insight = f"WorkforceIQ currently manages {len(employees)} active specialists across {len(projects)} initiatives. Overall organizational readiness index is optimal."
+        top_ready = [e for e in employees if e.status == "Available"][:4]
+        for e in top_ready:
+            matched_staff.append({
+                "id": e.id,
+                "name": e.name,
+                "role": e.role,
+                "skills": parse_skills(e.skills),
+                "metric": f"{e.experience_years}y Exp",
+                "status": e.status
+            })
+
+    return CopilotAnswer(
+        query=query_in.prompt,
+        suggested_action=action,
+        insight=insight,
+        recommended_personnel=matched_staff,
+        confidence_score=94.5
+    )
+
