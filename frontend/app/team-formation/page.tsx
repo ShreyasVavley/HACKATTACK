@@ -284,14 +284,14 @@ export default function TeamFormationPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-scarlet/10 text-scarlet font-bold text-xs shadow-clay-pill mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Scenario A • Squad-Level Optimization & Skill Synthesis</span>
+            <span>Scenario A • Team Matching</span>
           </div>
           <h1 className="text-3xl font-black text-charcoal tracking-tight">
-            Smart Team Formation
+            Team Matching
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <p className="text-xs md:text-sm font-medium text-charcoal-muted">
-              Algorithmic squad solver optimizing team skill coverage and availability.
+              Suggested team based on required skills, minimum experience, and current availability.
             </p>
             <button
               onClick={() => setMethodologyOpen(true)}
@@ -736,7 +736,7 @@ export default function TeamFormationPage() {
           <div>
             <h3 className="text-base font-black text-charcoal flex items-center gap-2">
               <Layers className="w-4 h-4 text-scarlet" />
-              Full Talent Matrix Ranking
+              Staff Rankings
             </h3>
             <span className="text-xs font-bold text-charcoal-muted">All active staff evaluated against project criteria</span>
           </div>

@@ -108,13 +108,13 @@ export default function SkillGapPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs shadow-clay-pill mb-2">
             <GraduationCap className="w-3.5 h-3.5" />
-            <span>Module 3 • Upskilling & Capability Advisor</span>
+            <span>Skill Gaps & Recommended Training</span>
           </div>
           <h1 className="text-3xl font-black text-charcoal tracking-tight">
-            Skill Gap & Training Advisor
+            Skill Gaps & Recommended Training
           </h1>
           <p className="text-xs md:text-sm font-medium text-charcoal-muted mt-1">
-            Analyze missing organizational capabilities and automatically suggest certified training tracks.
+            Identify missing skills across projects and review suggested training pathways.
           </p>
         </div>
 
@@ -180,7 +180,7 @@ export default function SkillGapPage() {
             <div className="mt-3">
               {gapData.missing_skills.length === 0 ? (
                 <span className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" /> 100% Core Competencies Covered
+                  <CheckCircle2 className="w-4 h-4" /> All required project skills covered
                 </span>
               ) : (
                 <div className="flex flex-wrap gap-1.5">
@@ -205,10 +205,10 @@ export default function SkillGapPage() {
         <div>
           <h2 className="text-xl font-black text-charcoal flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-scarlet" />
-            Targeted Learning & Upskilling Pathways
+            Suggested Courses
           </h2>
           <p className="text-xs font-semibold text-charcoal-muted mt-0.5">
-            Prescribed courses tailored to fill project gaps and advance internal talent mobility.
+            Courses tailored to fill project skill gaps and advance team capabilities.
           </p>
         </div>
 

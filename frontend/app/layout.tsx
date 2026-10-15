@@ -3,8 +3,8 @@ import "./globals.css";
 import SidebarNavigation from "../components/SidebarNavigation";
 
 export const metadata: Metadata = {
-  title: "Workforce Intelligence Platform — Workforce Planning & Talent Optimization",
-  description: "Enterprise-grade talent planning, workload balancing, and skill-gap optimization platform (WorkforceIQ).",
+  title: "WorkforceIQ — Resource Planning & Staffing Platform",
+  description: "Enterprise resource planning, team formation, workload balancing, and skill-gap optimization platform (WorkforceIQ).",
 };
 
 export default function RootLayout({

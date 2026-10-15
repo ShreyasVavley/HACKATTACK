@@ -208,13 +208,13 @@ export default function WorkloadBalancingPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 font-bold text-xs shadow-clay-pill mb-2">
             <Flame className="w-3.5 h-3.5 text-rose-500" />
-            <span>Scenario B • Workload Heatmap & Reallocation</span>
+            <span>Scenario B • Workload & Capacity Tracking</span>
           </div>
           <h1 className="text-3xl font-black text-charcoal tracking-tight">
-            Workload Balancing & Heatmap
+            Workload & Capacity Tracking
           </h1>
           <p className="text-xs md:text-sm font-medium text-charcoal-muted mt-1">
-            Detect burnout risks (&gt;85%), highlight bench resources (&lt;40%), and optimize task distribution.
+            Monitor team capacity, prevent burnout, and redistribute workload across available talent.
           </p>
         </div>
 
@@ -284,10 +284,10 @@ export default function WorkloadBalancingPage() {
             <div>
               <h2 className="text-xl font-black text-charcoal flex items-center gap-2">
                 <ArrowRightLeft className="w-5 h-5 text-scarlet" />
-                Automated Task Reallocation Directives
+                Redistribute Workload
               </h2>
               <p className="text-xs font-semibold text-charcoal-muted mt-0.5">
-                Heuristic matches overloaded engineers with bench specialists with compatible domain skills.
+                Matches overloaded engineers with bench specialists with compatible domain skills.
               </p>
             </div>
           </div>
@@ -420,7 +420,7 @@ export default function WorkloadBalancingPage() {
                           : "bg-scarlet/10 text-scarlet"
                       }`}
                     >
-                      {emp.utilization_pct}% {isBurnout ? "• Burnout Risk" : isBench ? "• Bench" : "• Optimal"}
+                      {emp.utilization_pct}% {isBurnout ? "• Over capacity (>85% allocated)" : isBench ? "• Bench" : "• Optimal"}
                     </span>
                     {isBurnout && (
                       <button

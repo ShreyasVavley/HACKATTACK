@@ -114,15 +114,15 @@ export default function OverviewHubPage() {
         <div className="max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-scarlet/10 text-scarlet font-bold text-xs border border-scarlet/20">
             <Sparkles className="w-3.5 h-3.5 text-scarlet" />
-            <span>Autonomous Intelligence & Talent Optimization</span>
+            <span>Criteria Met: 4/4</span>
           </div>
 
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-charcoal leading-tight">
-            Workforce Intelligence Platform
+            WorkforceIQ Platform
           </h1>
 
           <p className="text-sm md:text-base font-medium text-charcoal-muted leading-relaxed">
-            Eliminate project bottlenecks by intelligently matching high-fit engineers, balancing weekly team workloads, and prescribing automated skill-gap learning journeys.
+            Eliminate project bottlenecks by matching high-fit engineers, balancing weekly team workloads, and prescribing targeted skill-gap learning journeys.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -131,7 +131,7 @@ export default function OverviewHubPage() {
               className="px-5 py-2.5 rounded-lg bg-scarlet hover:bg-scarlet-dark text-white text-xs md:text-sm font-bold flex items-center gap-2 shadow-sm transition-all"
             >
               <Users className="w-4 h-4" />
-              <span>Launch Team Formation</span>
+              <span>Launch Team Matching</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
 
@@ -199,7 +199,7 @@ export default function OverviewHubPage() {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">
-              Burnout Risk (&gt;85%)
+              Burnout Alerts
             </span>
             <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
               <Flame className="w-5 h-5" />
@@ -221,7 +221,7 @@ export default function OverviewHubPage() {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
-              Bench Talent (&lt;40%)
+              Available Bench Staff
             </span>
             <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Zap className="w-5 h-5" />

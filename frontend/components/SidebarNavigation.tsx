@@ -80,7 +80,7 @@ export default function SidebarNavigation() {
                   </span>
                 </div>
                 <p className="text-[10px] font-semibold text-charcoal-muted">
-                  Workforce Planning
+                  Resource Planning & Staffing Platform
                 </p>
               </div>
             </Link>
