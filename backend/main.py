@@ -585,10 +585,10 @@ def calculate_realtime_scores(
             exp_ratio = 1.0
         elif candidate_exp >= required_exp * 0.8:
             # Borderline (e.g. 4.0-4.9y for a 5.0y requirement)
-            exp_ratio = 0.5 * (candidate_exp / required_exp)
+            exp_ratio = 0.25 * (candidate_exp / required_exp)
         else:
             # Significant under-qualification (e.g. 3.8y for 5.0y requirement)
-            exp_ratio = 0.2 * (candidate_exp / required_exp)
+            exp_ratio = 0.05 * (candidate_exp / required_exp)
     else:
         exp_ratio = 1.0
     experience_component = exp_ratio * 25.0
@@ -600,23 +600,27 @@ def calculate_realtime_scores(
     if utilization >= 90.0:
         avail_ratio = 0.0  # Disqualified / zero availability
     elif utilization >= 85.0:
-        avail_ratio = 0.05  # Severe burnout penalty
+        avail_ratio = 0.0  # Disqualified from availability
     elif utilization >= 80.0:
-        avail_ratio = 0.20  # Critical capacity warning
+        avail_ratio = 0.05  # Critical capacity warning
     elif utilization <= 40.0:
         avail_ratio = 1.00  # Bench talent is immediately available
     else:
         # Linearly proportional between 40% and 80%
-        avail_ratio = 0.85 - ((utilization - 40.0) / 40.0) * 0.45
+        avail_ratio = 0.85 - ((utilization - 40.0) / 40.0) * 0.50
     availability_component = max(0.0, avail_ratio) * 25.0
 
-    # Hard Cap Penalty: If candidate is severely burned out (>85%) or misses experience threshold by >25%,
+    # Hard Cap Penalty: If candidate is severely burned out (>80%) or misses experience threshold by >10%,
     # reduce composite score so they cannot leapfrog qualified, available specialists.
     composite_raw = skill_component + experience_component + availability_component
     if utilization >= 85.0:
-        composite_raw = min(composite_raw, 45.0)  # Cannot be a prime recommendation
-    if required_exp > 0 and candidate_exp < required_exp * 0.8:
-        composite_raw = min(composite_raw, 58.0)  # Under-qualified cannot rank #1
+        composite_raw = min(composite_raw, 35.0)  # Cannot rank near top
+    elif utilization >= 80.0:
+        composite_raw = min(composite_raw, 42.0)
+    if required_exp > 0 and candidate_exp < required_exp:
+        # Strict penalty for failing experience threshold
+        exp_deficit = (required_exp - candidate_exp) / required_exp
+        composite_raw = min(composite_raw, max(20.0, 48.0 - (exp_deficit * 30.0)))
 
     composite = round(composite_raw, 1)
 
@@ -871,13 +875,15 @@ def match_team(request: MatchRequest, db: Session = Depends(get_db)):
     # Instead of picking top individual scores in isolation, solve for the whole squad
     # using greedy set-cover with score optimization so the combined team satisfies
     # all required skills (e.g. swapping for an engineer that ensures React/Data is covered).
-    # Disqualify severe burnout (>85%) from auto-selection unless no alternative exists.
+    # Disqualify severe burnout (>=80%) from auto-selection unless no alternative exists.
     # ---------------------------------------------------------
     eligible_candidates = [
         c for c in candidate_scores
-        if c.utilization_pct < 85.0  # Hard burnout filter for squad selection
+        if c.utilization_pct < 80.0  # Hard burnout filter for squad selection
     ]
-    # If not enough under-utilized candidates, fallback to entire pool
+    # If not enough under-utilized candidates, fallback to pool under 85%
+    if len(eligible_candidates) < team_size:
+        eligible_candidates = [c for c in candidate_scores if c.utilization_pct < 85.0]
     if len(eligible_candidates) < team_size:
         eligible_candidates = list(candidate_scores)
 
@@ -896,45 +902,32 @@ def match_team(request: MatchRequest, db: Session = Depends(get_db)):
     selected_team: List[CandidateMatch] = []
     pool = list(eligible_candidates)
 
-    # Step 1: Pick the highest composite score anchor candidate
-    if pool:
-        best_anchor = pool[0]
-        selected_team.append(best_anchor)
-        pool.remove(best_anchor)
+    # Combinatorial Squad Optimization:
+    # Find the combination of candidates of size `team_size` that maximizes
+    # covered required skills (aiming for 100% coverage, including React),
+    # breaking ties by sum of match scores and experience tenure.
+    from itertools import combinations
+    best_squad = None
+    best_cov_count = -1
+    best_squad_score = -1.0
 
-    # Step 2: Iteratively pick subsequent squad members greedily
-    # to maximize newly covered required skills, tie-broken by candidate match score.
-    while len(selected_team) < team_size and pool:
-        current_cov = compute_squad_coverage(selected_team)
-        uncovered = req_skills_set - current_cov
+    # Test all valid combinations from eligible candidates (under burnout threshold)
+    candidate_subsets = list(combinations(pool, min(team_size, len(pool))))
+    for squad in candidate_subsets:
+        cov = compute_squad_coverage(list(squad))
+        cov_count = len(cov & req_skills_set)
+        squad_score = sum(c.match_score for c in squad)
 
-        best_pick = None
-        best_new_coverage_count = -1
-        best_pick_score = -1.0
+        if cov_count > best_cov_count or (cov_count == best_cov_count and squad_score > best_squad_score):
+            best_cov_count = cov_count
+            best_squad_score = squad_score
+            best_squad = list(squad)
 
-        for cand in pool:
-            cand_skills_l = [s.lower() for s in cand.all_skills]
-            new_covered = sum(
-                1 for u in uncovered
-                if any(u == cs or u in cs or cs in u for cs in cand_skills_l)
-            )
-
-            # Heuristic: Prioritize candidates who cover uncovered skills.
-            # Value each new skill coverage heavily (+100 weight for ranking)
-            composite_value = (new_covered * 100.0) + cand.match_score
-
-            if (new_covered > best_new_coverage_count) or (
-                new_covered == best_new_coverage_count and cand.match_score > best_pick_score
-            ):
-                best_new_coverage_count = new_covered
-                best_pick_score = cand.match_score
-                best_pick = cand
-
-        if best_pick:
-            selected_team.append(best_pick)
-            pool.remove(best_pick)
-        else:
-            break
+    if best_squad:
+        # Sort squad members by individual match score descending
+        selected_team = sorted(best_squad, key=lambda c: c.match_score, reverse=True)
+    else:
+        selected_team = pool[:team_size]
 
     # Check overall team competency coverage
     combined_team_skills = set()
