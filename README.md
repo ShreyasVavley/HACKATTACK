@@ -2,20 +2,29 @@
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 14](https://img.shields.io/badge/Frontend-Next.js%2014-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
-[![Tailwind CSS](https://img.shields.io/badge/Styling-Claymorphic%20Tailwind-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![Tailwind CSS](https://img.shields.io/badge/Styling-Enterprise%20Tailwind-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20SQLAlchemy-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Deployment-Docker%20Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
 
-**Workforce Intelligence Platform** (Codename: **WorkforceIQ**) is an enterprise-grade intelligent platform designed for Project Managers, Resource Allocation Managers, and HR Operations Leads. It automates talent-to-project matching with custom mathematical heuristics, monitors real-time workload distributions, detects burnout and bench imbalances, performs what-if capacity simulations, and offers a conversational AI Copilot.
+**Workforce Intelligence Platform** (Codename: **WorkforceIQ**) is an enterprise-grade workforce planning, resource allocation, and talent optimization dashboard designed for Project Managers, Operations Directors, and HR Allocation Leads.
+
+The system is purposefully built around the three core pillars of modern workforce operations:
+1. **Smart Team Formation (Scenario A)** — Multi-factor algorithmic matching balancing candidate skill overlap, experience tenure, and real-time availability with squad-level combinatorial set coverage.
+2. **Workload Balancing (Scenario B)** — Capacity monitoring, burnout threshold detection ($>85\%$), bench talent tracking ($<40\%$), and automated one-click task reallocation shifts.
+3. **Skill Gap Analysis & Training** — Automated project competency gap assessment and targeted training module pathways.
 
 ---
 
-## 🎨 UI Aesthetic & Design Philosophy
+## 🎨 Enterprise UI & Vertical Left Sidebar Architecture
 
-WorkforceIQ is designed with a tactile **3D Claymorphic** aesthetic using a strict three-color palette:
-- **Ivory (`#FAF8F5`)**: Organic background surfaces, clay cards, and tactile inputs.
-- **Charcoal Black (`#16171B`)**: Crisp typography, high-contrast borders, headers, and navigation anchors.
-- **Scarlet Red (`#DC2626`)**: Primary CTAs, active badges, match percentages, burnout warnings, and interactive accents.
+The platform features an **Enterprise Vertical Left Sidebar** designed specifically for high-density HR and operations management:
+- **Persistent Left Navigation**: Single-click access between Overview Hub, Smart Team Formation, Workload Balancing, Skill Gap Analysis, and Talent Analytics.
+- **Integrated Actions & Live Engine Sync**: A dedicated `[Create New Record]` trigger and real-time WebSocket connection badge are embedded directly into the sidebar.
+- **Disciplined Enterprise Palette**:
+  - **Ivory (`#FAF8F5`)**: High-legibility background surfaces and structured cards.
+  - **Charcoal Black (`#16171B`)**: Crisp typography, high-contrast borders, headers, and active state indicators.
+  - **Scarlet Red (`#DC2626`)**: Primary CTAs, active status badges, match scores, burnout risk tags, and interactive indicators.
+- **Enterprise Radii & Elevation**: Clean 8–12px container borders with subtle elevation shadows (`shadow-xs` / `shadow-sm`) replacing heavy claymorphic bubbles.
 
 ---
 
@@ -33,79 +42,87 @@ WorkforceIQ is designed with a tactile **3D Claymorphic** aesthetic using a stri
 │   │   ├── team-formation/page.tsx  # Scenario A: Team matching with real-time algorithmic scoring
 │   │   ├── workload-balancing/page.tsx # Scenario B: Utilization heatmap & one-click task reallocation
 │   │   ├── skill-gap/page.tsx       # Module 3: Competency coverage and training course recommendations
-│   │   ├── analytics/page.tsx       # Searchable directory with live filters and CSV export
-│   │   ├── simulation/page.tsx      # What-If Capacity & Burnout Simulation engine
-│   │   ├── copilot/page.tsx         # Natural Language AI Talent & Squad Copilot
-│   │   ├── layout.tsx               # Root layout with claymorphic wrappers
-│   │   └── globals.css              # Custom claymorphism shadow and card utility classes
+│   │   ├── analytics/page.tsx       # Talent directory with mailto actions and baseline-aligned cards
+│   │   ├── simulation/page.tsx      # What-If Capacity & Burnout Simulation engine with delta feedback
+│   │   ├── layout.tsx               # Root layout integrating the Vertical Left Sidebar
+│   │   └── globals.css              # Custom enterprise utility classes and variables
 │   ├── components/
-│   │   ├── Navigation.tsx           # Global navigation bar with quick "+ Add Entity" modal trigger
-│   │   └── CreateEntityModal.tsx    # Interactive CRUD modal for judges to add custom employees & projects
+│   │   ├── SidebarNavigation.tsx    # Enterprise Vertical Left Sidebar navigation
+│   │   ├── RealtimeNotificationCenter.tsx # WebSocket live-sync listener
+│   │   └── CreateEntityModal.tsx    # Interactive CRUD modal to add custom employees & projects
 │   ├── lib/
 │   │   └── api.ts                   # Dynamic API URL resolver (supporting local, Docker, and cloud proxies)
 │   ├── package.json                 # Next.js 14, React 18, Tailwind CSS, Lucide icons, Canvas Confetti
 │   ├── Dockerfile                   # Multi-stage production frontend Dockerfile
-│   └── tailwind.config.js           # Ivory, Charcoal, and Scarlet custom clay palette
+│   └── tailwind.config.js           # Ivory, Charcoal, and Scarlet enterprise palette
 ├── docker-compose.yml       # One-command full-stack container orchestration
 └── README.md
 ```
 
 ---
 
-## ⚡ Core Modules & Features
+## ⚡ Core Modules & Problem Scenarios
 
 ### 1. Smart Team Formation Engine (Scenario A) — `/team-formation`
-- **Algorithmic Matching Engine**: Calculates a composite match score:
-  $$\text{Match Score} = \left(\frac{\text{skills\_matched}}{\text{skills\_required}} \times 50\right) + (\text{experience} \times 25) + (\text{availability} \times 25)$$
-- **Custom Squad Size Slider**: Dynamically form teams from 2 to 8 specialists.
-- **Dynamic DB Assignment**:
-  - Clicking **"Deploy Squad to Project"** or individual **"+ Assign"** buttons sends a `POST` request to SQLite.
-  - Automatically increments weekly workload hours, transitions employee status (`Available` $\rightarrow$ `Partially Allocated` $\rightarrow$ `Busy`), and immediately updates the system-wide utilization heatmap.
+- **Algorithmic Scoring Model**:
+  $$\text{Match Score} = \left(\frac{\text{Skills Matched}}{\text{Skills Required}} \times 50\right) + (\text{Experience Score} \times 25) + (\text{Availability Score} \times 25)$$
+- **Whole-Squad Combinatorial Set Cover**: Rather than selecting isolated high-scorers, the engine ensures the combined squad satisfies 100% of required competencies (e.g. automatically pairing backend specialists with frontend and cloud experts to cover React, Python, and AWS).
+- **Hard Burnout Filter**: Candidates with $>85\%$ capacity (e.g. 90% allocation) are disqualified from auto-selection to prevent burnout.
+- **Strict Experience Threshold**: Applies a sub-linear penalty to prevent junior engineers from ranking #1 on projects requiring senior tenure.
+- **Interactive Methodology Modal**: View the exact scoring formula, component weights, and mathematical derivations via the **"Scoring Methodology"** modal.
+- **Hover Micro-Bars**: Interactive visual breakdown showing exact points contributed by Skills, Experience, and Availability.
+- **Auto-Resolve Gaps & Inline Swapping**:
+  - One-click **"Auto-swap to cover [Skill]"** quick button.
+  - Direct **Swap #1**, **Swap #2**, **Swap #3** buttons in the full talent matrix table.
+  - Squad card **"Remove"** and bench re-selection.
+- **Deployment Lock**: Enforces that critical skill gaps must be resolved before deploying a squad.
 
-### 2. Workload Balancing & Bench Analytics (Scenario B) — `/workload-balancing`
-- **Live Utilization Metrics**: Visual progress bars mapping each employee's weekly workload against their 40-hour capacity.
+### 2. Workload Balancing & Capacity Heatmaps (Scenario B) — `/workload-balancing`
+- **Live Utilization Metrics**: Real-time progress bars mapping each specialist's weekly commitments against their 40-hour limit.
 - **Automated Health Tagging**:
-  - **Overloaded (`>85%`)**: Marked with scarlet fire tags as critical burnout risks.
-  - **Bench (`<40%`)**: Marked as available bench resources ready for allocation.
-- **One-Click Task Redistribution**:
-  - Reallocation heuristic pairs overloaded personnel with underutilized colleagues sharing overlapping skillsets.
-  - Clicking **"Execute Shift"** immediately mutates SQLite database hours and rebalances utilization.
+  - **Burnout Risk (`>85%`)**: Highlighted with warning indicators for immediate attention.
+  - **Optimal (`40% – 85%`)**: Healthy balanced workload.
+  - **Bench (`<40%`)**: Available capacity ready for assignment.
+- **One-Click "Rebalance Hours" Action**: Next to every overallocated specialist, a quick `[Rebalance Hours]` button automatically offloads excess hours to compatible bench talent and mutates SQLite in real-time.
+- **Direct Task Reallocation Heuristic**: Pairs overloaded personnel with underutilized peers sharing overlapping technical competencies.
 
 ### 3. Automated Skill-Gap Analysis & Training Advisor — `/skill-gap`
-- **Competency Coverage Engine**: Compares active project skill demands against team capabilities.
-- **Targeted Training Modules**: Recommends internal and external courses (AWS, DeepLearning.AI, Coursera, Linux Foundation) with direct enrollment paths.
+- **Competency Coverage Engine**: Compares active project technical demands against organizational talent pool capabilities.
+- **Targeted Training Modules**: Curates targeted learning paths (AWS Solutions Architect, Full-Stack React, Spark/Kafka Data Lakehouse, Kubernetes SecOps) with one-click enrollment paths.
 
-### 4. Interactive CRUD for Judges (`+ Add Entity` Modal)
-- Judges can add a **Brand-New Employee** or **Custom Project** directly on the UI at any time.
-- As soon as the entity is added to SQLite, the matching engine instantly recalculates squad rosters and workload heatmaps without refreshing.
+### 4. Talent Analytics & Directory — `/analytics`
+- **Baseline-Aligned Talent Cards**: Fixed-height competency containers ensure all candidate cards, email triggers, and experience tags align evenly across grid columns.
+- **Interactive Email Tooltips**: Clean email action buttons (`mailto:`) with hover tooltips preventing raw string truncation.
+- **Search & Filters**: Instant multi-attribute filtering by name, role, skill, and allocation status.
+- **One-Click CSV Export**: Instant talent data export for reporting and analysis.
 
 ### 5. What-If Capacity & Burnout Simulation — `/simulation`
-- Select any active project and drag the **Additional Demand Slider** ($+5\text{h}$ to $+80\text{h}$).
-- Evaluates the impact on organizational burnout counts, shifts in average capacity, and candidate readiness without mutating the production database.
+- **Real-Time Delta Feedback**: Interactive sliders with live recalculation of total weekly hours added (`+[hours]h total capacity load`) and estimated financial impact (`+$[cost] / wk est. cost`).
+- **Zero-Risk Modeling**: Evaluates the organizational strain and burnout shift before making any production database mutations.
 
-### 6. Natural Language AI Talent Copilot — `/copilot`
-- Conversational chat interface for resource managers with instant one-click prompts:
-  - *"Find available engineers with Python and Cloud Computing"*
-  - *"Who is currently at risk of burnout (>85% workload)?"*
-  - *"Show me bench specialists with under 40% workload"*
-  - *"Recommend senior engineers with at least 5 years experience"*
-- Renders candidate talent cards with live match percentages, skill badges, and workload metrics.
-
-### 7. Global Workforce Directory & CSV Export — `/analytics`
-- Searchable talent directory with role, status, and skill filtering.
-- One-click **Export to CSV** for offline reporting.
+### 6. Interactive CRUD (`+ Create New Record`)
+- Administrators can add a **Brand-New Specialist** or **Custom Project** at any time.
+- Integrated WebSocket broadcast (`workforce_iq_live_sync`) immediately triggers live recalculations across all open views without requiring a page refresh.
 
 ---
 
-## 🇮🇳 Realistic Seed Dataset
+## 🇮🇳 Realistic Indian Talent Dataset
 
-The SQLite database (`backend/workforce_iq.db`) initializes automatically on startup with authentic Indian engineering professionals across diverse disciplines:
+The SQLite database (`backend/workforce_iq.db`) is pre-seeded with authentic engineering profiles across multiple disciplines:
 - **Aarav Sharma** — Lead Cloud & DevOps Architect (AWS, Kubernetes, Terraform)
 - **Diya Patel** — Senior Full Stack Developer (React, Next.js, Node.js)
 - **Arjun Nambiar** — Principal Data & AI Engineer (Python, PyTorch, LangChain, MLOps)
 - **Ananya Iyer** — Senior Backend Systems Specialist (Java, Spring Boot, Microservices)
 - **Ishaan Mukherjee** — Data Analyst & BI Developer (SQL, Tableau, Data Analytics)
-- *...along with Kavya Sundaram, Vihaan Reddy, Aditi Deshmukh, Rohan Verma, Pooja Kulkarni, Siddharth Rao, Meera Nair, Kabir Chawla, and Tanvi Bhattacharya.*
+- **Kavya Sundaram** — Cloud Infrastructure Engineer (Cloud Computing, Docker, Python, AWS)
+- **Vihaan Reddy** — Full Stack Web Developer (React, TypeScript, Node.js, REST APIs)
+- **Aditi Deshmukh** — Distinguished Enterprise Architect (Java, Cloud Computing, System Design)
+- **Rohan Verma** — React & Mobile Frontend Developer (React, React Native, JavaScript)
+- **Pooja Kulkarni** — Platform Data Pipeline Engineer (Data Analytics, Python, Kafka, Spark)
+- **Siddharth Rao** — Cloud Security & SecOps Lead (Security, AWS, Linux, CI/CD)
+- **Meera Nair** — Java & Cloud Backend Specialist (Java, Python, Spring Boot, Kubernetes)
+- **Kabir Chawla** — Distributed Systems Engineer (Python, Docker, Kubernetes, REST APIs)
+- **Tanvi Bhattacharya** — Full Stack & Next.js Engineer (React, Next.js, TypeScript, PostgreSQL)
 
 ---
 
@@ -147,12 +164,12 @@ Open **`http://localhost:3000`** in your browser.
 
 ### 🐳 Running with Docker Compose
 
-Deploy the entire stack (FastAPI backend + Next.js frontend) with a single command:
+Deploy the entire stack with a single command:
 ```bash
 docker-compose up --build
 ```
 - Frontend: `http://localhost:3000`
-- Backend API & Docs: `http://localhost:8000/docs`
+- Backend API & Swagger: `http://localhost:8000/docs`
 
 ---
 
@@ -161,25 +178,17 @@ docker-compose up --build
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/health` | Backend and SQLite health status |
-| `GET` | `/api/employees` | Fetch all employees with real-time workload stats |
-| `POST` | `/api/employees` | Create a new employee (Interactive CRUD) |
-| `GET` | `/api/projects` | Fetch all organizational projects |
-| `POST` | `/api/projects` | Create a new project (Interactive CRUD) |
-| `POST` | `/api/match-team` | Algorithmic scoring and squad recommendations |
+| `GET` | `/api/employees` | Fetch all employees with live workload and utilization stats |
+| `POST` | `/api/employees` | Create a new employee record (Interactive CRUD) |
+| `GET` | `/api/projects` | Fetch all organizational pipeline projects |
+| `POST` | `/api/projects` | Create a new project record (Interactive CRUD) |
+| `POST` | `/api/match-team` | Algorithmic scoring and squad-level combinatorial recommendations |
 | `POST` | `/api/assign-squad` | Dynamic DB allocation (updates hours & status in SQLite) |
 | `GET` | `/api/workload-stats` | Global utilization metrics, burnout risks, and bench counts |
 | `POST` | `/api/reallocate` | Generate workload balancing suggestions |
 | `POST` | `/api/apply-shift` | Apply task shift (mutates employee hours in SQLite) |
 | `GET` | `/api/skill-gaps/{project_id}` | Project competency gap analysis and course recommendations |
 | `POST` | `/api/simulate-capacity` | What-If workload capacity and burnout simulation |
-| `POST` | `/api/ai-copilot` | Natural language talent and squad query processor |
-
----
-
-## 🧪 Deployment Readiness
-- **Reverse Proxy / Single Domain Compatible**: Frontend dynamically handles `NEXT_PUBLIC_API_URL` or relative paths when routed behind Nginx/Caddy.
-- **CORS Configured**: Pre-configured with permissive CORS for hackathon evaluation and staging environments.
-- **Production Build Verified**: Fully compiled Next.js standalone output and uvicorn production server ready for Render, Railway, Fly.io, or Vercel.
 
 ---
 
