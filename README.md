@@ -2,14 +2,16 @@
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 14](https://img.shields.io/badge/Frontend-Next.js%2014-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
-[![Vercel Production](https://img.shields.io/badge/Deployed-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://frontend-three-ecru-54.vercel.app)
+[![Vercel Frontend](https://img.shields.io/badge/Frontend-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://frontend-three-ecru-54.vercel.app)
+[![Render Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://hackattack.onrender.com/docs)
 [![Tailwind CSS](https://img.shields.io/badge/Styling-Enterprise%20Tailwind-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20SQLAlchemy-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Deployment-Docker%20Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
 
 **Workforce Intelligence Platform** (Codename: **WorkforceIQ**) is an enterprise-grade resource planning, staffing, and workforce optimization platform designed for Project Managers, Operations Directors, and Resource Allocation Leads.
 
-🌐 **Live Vercel Frontend**: [https://frontend-three-ecru-54.vercel.app](https://frontend-three-ecru-54.vercel.app)
+🌐 **Live Vercel Frontend**: [https://frontend-three-ecru-54.vercel.app](https://frontend-three-ecru-54.vercel.app)  
+⚡ **Live Render Backend API & Swagger Docs**: [https://hackattack.onrender.com/docs](https://hackattack.onrender.com/docs)
 
 The system is purposefully built around the three core pillars of modern workforce operations:
 1. **Smart Team Formation (Scenario A)** — Multi-factor algorithmic matching balancing candidate skill overlap, experience tenure, and real-time availability with whole-squad combinatorial set coverage.
