@@ -14,10 +14,11 @@ import {
   Layers,
   ShieldAlert,
   Check,
-  Filter,
-  Sliders,
-  ChevronDown
+  CheckCheck,
+  UserCheck,
+  Plus
 } from "lucide-react";
+import CreateEntityModal from "../../components/CreateEntityModal";
 
 interface Project {
   id: number;
@@ -69,26 +70,30 @@ export default function TeamFormationPage() {
   const [teamSize, setTeamSize] = useState<number>(3);
   const [recommendation, setRecommendation] = useState<TeamRecommendation | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [assigning, setAssigning] = useState<boolean>(false);
+  const [assignedSuccessMsg, setAssignedSuccessMsg] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    async function loadProjects() {
-      try {
-        const res = await fetch(`${API_BASE}/api/projects`);
-        if (res.ok) {
-          const projs = await res.json();
-          setProjects(projs);
-          if (projs.length > 0) {
-            setSelectedProjectId(projs[0].id);
-            fetchTeam(projs[0].id, 3);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading projects:", err);
-      }
-    }
     loadProjects();
   }, []);
+
+  const loadProjects = async (preferredProjId?: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/projects`);
+      if (res.ok) {
+        const projs = await res.json();
+        setProjects(projs);
+        if (projs.length > 0) {
+          const targetId = preferredProjId || projs[0].id;
+          setSelectedProjectId(targetId);
+          fetchTeam(targetId, teamSize);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading projects:", err);
+    }
+  };
 
   const fetchTeam = async (projId: number, size: number) => {
     setLoading(true);
@@ -105,7 +110,6 @@ export default function TeamFormationPage() {
         const data = await res.json();
         setRecommendation(data);
         
-        // Trigger celebratory confetti on high match readiness
         if (data.overall_team_readiness >= 75) {
           confetti({
             particleCount: 50,
@@ -127,33 +131,108 @@ export default function TeamFormationPage() {
     fetchTeam(id, teamSize);
   };
 
+  // Dynamic DB State Change: Assign recommended squad to project
+  const handleAssignSquad = async () => {
+    if (!recommendation || recommendation.selected_team.length === 0) return;
+
+    setAssigning(true);
+    try {
+      const empIds = recommendation.selected_team.map((c) => c.employee_id);
+      const res = await fetch(`${API_BASE}/api/assign-squad`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project_id: selectedProjectId,
+          employee_ids: empIds,
+          hours_per_member: 18,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAssignedSuccessMsg(data.message);
+
+        // Multi-colored celebratory confetti
+        confetti({
+          particleCount: 80,
+          spread: 80,
+          origin: { y: 0.5 },
+          colors: ['#10B981', '#2563EB', '#F59E0B']
+        });
+
+        // Re-fetch match to immediately show updated hours, status shifts, and availability scores
+        setTimeout(() => {
+          fetchTeam(selectedProjectId, teamSize);
+        }, 600);
+
+        setTimeout(() => {
+          setAssignedSuccessMsg(null);
+        }, 6000);
+      }
+    } catch (err) {
+      console.error("Failed to assign squad:", err);
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const currentProject = projects.find((p) => p.id === selectedProjectId);
 
   return (
     <main className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
+      {/* Toast Notification of Live SQLite State Change */}
+      <AnimatePresence>
+        {assignedSuccessMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -15, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 px-6 rounded-3xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 text-xs md:text-sm font-bold shadow-clay-card flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
+              <CheckCheck className="w-5 h-5 stroke-[3]" />
+            </div>
+            <div>
+              <div className="font-black text-emerald-900 uppercase text-xs">Live SQLite State Shifted</div>
+              <p className="font-medium">{assignedSuccessMsg}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-scarlet/10 text-scarlet font-bold text-xs shadow-clay-pill mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Scenario A • Intelligent Squad Matching</span>
+            <span>Scenario A • Algorithmic Matching & Dynamic State Shifts</span>
           </div>
           <h1 className="text-3xl font-black text-charcoal tracking-tight">
             Smart Team Formation
           </h1>
           <p className="text-xs md:text-sm font-medium text-charcoal-muted mt-1">
-            Autonomous multi-criteria matching engine blending skills (50%), experience (25%), and availability (25%).
+            Real-time scoring: <code className="bg-ivory-200 px-2 py-0.5 rounded font-mono text-scarlet font-bold">(skills_matched / skills_required * 50) + (experience * 25) + (availability * 25)</code>
           </p>
         </div>
 
-        <button
-          onClick={() => fetchTeam(selectedProjectId, teamSize)}
-          disabled={loading}
-          className="clay-btn-primary px-6 py-3 text-xs md:text-sm font-bold flex items-center gap-2 self-start md:self-auto"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          <span>{loading ? "Optimizing Squad..." : "Re-Calculate Match"}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setModalOpen(true)}
+            className="clay-btn-secondary px-5 py-3 text-xs md:text-sm font-bold flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4 text-scarlet" />
+            <span>Add Custom Entity</span>
+          </button>
+
+          <button
+            onClick={() => fetchTeam(selectedProjectId, teamSize)}
+            disabled={loading}
+            className="clay-btn-primary px-6 py-3 text-xs md:text-sm font-bold flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <span>{loading ? "Matching..." : "Recalculate Match"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Clay Configuration Controls */}
@@ -165,9 +244,14 @@ export default function TeamFormationPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Target Project Dropdown */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-charcoal uppercase tracking-wider block">
-              1. Select Project Requirement
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-charcoal uppercase tracking-wider block">
+                1. Target Project
+              </label>
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-scarlet/10 text-scarlet">
+                {currentProject?.status}
+              </span>
+            </div>
             <div className="clay-inset p-2">
               <select
                 value={selectedProjectId}
@@ -226,16 +310,28 @@ export default function TeamFormationPage() {
 
         {/* Project Technical Specifications Pill Bar */}
         {currentProject && (
-          <div className="pt-4 border-t border-charcoal/10 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-charcoal">Required Competencies:</span>
-            {currentProject.required_skills.map((s, idx) => (
-              <span
-                key={idx}
-                className="text-xs px-3 py-1 rounded-full bg-white text-charcoal font-bold shadow-clay-pill border border-charcoal/5"
-              >
-                {s}
-              </span>
-            ))}
+          <div className="pt-4 border-t border-charcoal/10 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-charcoal">Required Competencies:</span>
+              {currentProject.required_skills.map((s, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs px-3 py-1 rounded-full bg-white text-charcoal font-bold shadow-clay-pill border border-charcoal/5"
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+
+            {/* Deploy Squad Action Button */}
+            <button
+              onClick={handleAssignSquad}
+              disabled={assigning || !recommendation}
+              className="clay-btn-primary px-6 py-2.5 text-xs font-black flex items-center gap-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 shadow-clay-btn"
+            >
+              <UserCheck className="w-4 h-4 stroke-[2.5]" />
+              <span>{assigning ? "Updating Database..." : "Deploy Squad to Project"}</span>
+            </button>
           </div>
         )}
       </motion.div>
@@ -370,15 +466,15 @@ export default function TeamFormationPage() {
                   {/* Sub-Score Breakdown Chips */}
                   <div className="mt-4 grid grid-cols-3 gap-2 clay-inset p-3 text-center text-xs">
                     <div>
-                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Skill</span>
+                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Skill (50%)</span>
                       <span className="font-black text-scarlet">{cand.skill_match_score}%</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Exp</span>
+                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Exp (25%)</span>
                       <span className="font-black text-charcoal">{cand.experience_years}y</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Load</span>
+                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Load (25%)</span>
                       <span
                         className={`font-black ${
                           cand.utilization_pct > 85
@@ -529,6 +625,14 @@ export default function TeamFormationPage() {
           </table>
         </div>
       </div>
+
+      {/* CRUD Modal */}
+      <CreateEntityModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onEmployeeCreated={() => fetchTeam(selectedProjectId, teamSize)}
+        onProjectCreated={(newId) => loadProjects(newId)}
+      />
     </main>
   );
 }

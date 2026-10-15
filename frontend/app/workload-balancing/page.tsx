@@ -102,10 +102,25 @@ export default function WorkloadBalancingPage() {
     }
   };
 
-  const handleExecuteShift = (item: ReallocationItem) => {
-    setAppliedNotice(
-      `✓ Shift Transferred: ${item.suggested_hours_to_shift}h/wk task allocation shifted from ${item.from_employee_name} to ${item.to_employee_name}!`
-    );
+  const handleExecuteShift = async (item: ReallocationItem) => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/apply-shift?from_id=${item.from_employee_id}&to_id=${item.to_employee_id}&hours=${item.suggested_hours_to_shift}`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setAppliedNotice(
+          `✓ SQLite Shift Updated: Shifted ${item.suggested_hours_to_shift}h from ${item.from_employee_name} to ${item.to_employee_name}! Utilization heatmap updated live.`
+        );
+        // Instantly refresh live workload stats and employee hours from SQLite
+        await fetchWorkloadData();
+        // Recalculate remaining shifts
+        await handleGenerateShifts();
+      }
+    } catch (err) {
+      console.error("Failed to execute shift in DB:", err);
+    }
     setTimeout(() => setAppliedNotice(null), 5000);
   };
 

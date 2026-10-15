@@ -64,7 +64,6 @@ class TrainingModuleModel(Base):
 # Seed Data Generation
 # ---------------------------------------------------------
 def seed_database(db: Session):
-    # Check if data already exists
     if db.query(EmployeeModel).first():
         return
 
@@ -208,7 +207,7 @@ def seed_database(db: Session):
         ),
         ProjectModel(
             name="AI Talent & Workforce Portal",
-            description="Internal glassmorphic HR optimization portal with intelligent scheduling & predictive match scores.",
+            description="Internal HR optimization portal with intelligent scheduling & predictive match scores.",
             required_skills="React, Next.js, Python, Tailwind CSS, UI/UX",
             required_experience=3.5,
             status="Planning"
@@ -286,9 +285,7 @@ def seed_database(db: Session):
 # ---------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables
     Base.metadata.create_all(bind=engine)
-    # Seed data
     db = SessionLocal()
     try:
         seed_database(db)
@@ -297,23 +294,22 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="WorkforceIQ API",
+    title="Workforce Intelligence API",
     description="Intelligent Workforce Planning & Talent Optimization Engine",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan
 )
 
 # CORS Configuration for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Production ready & dev-friendly across ports 3000, 3001, etc.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -325,6 +321,23 @@ def get_db():
 # ---------------------------------------------------------
 # Pydantic Schemas
 # ---------------------------------------------------------
+class EmployeeCreate(BaseModel):
+    name: str = Field(..., min_length=2, example="Jordan Lee")
+    email: str = Field(..., example="jordan.lee@workforceiq.internal")
+    role: str = Field(..., example="Full Stack Cloud Developer")
+    skills: List[str] = Field(..., example=["Python", "React", "Cloud Computing"])
+    experience_years: float = Field(..., ge=0.0, example=4.5)
+    max_hours: Optional[int] = Field(40, ge=10, le=80)
+    current_workload_hours: Optional[int] = Field(15, ge=0)
+
+
+class ProjectCreate(BaseModel):
+    name: str = Field(..., min_length=3, example="Autonomous Drone Fleet AI")
+    description: Optional[str] = Field("", example="Edge computing and fleet coordination platform.")
+    required_skills: List[str] = Field(..., min_length=1, example=["Python", "Cloud Computing", "Machine Learning"])
+    required_experience: float = Field(..., ge=0.5, example=4.0)
+
+
 class EmployeeOut(BaseModel):
     id: int
     name: str
@@ -370,7 +383,7 @@ class CandidateMatch(BaseModel):
     current_workload_hours: int
     available_hours: int
     status: str
-    match_score: float  # 0 to 100%
+    match_score: float  # Exact: (skills_matched / skills_required * 50) + (experience_score * 25) + (availability_score * 25)
     skill_match_score: float
     experience_score: float
     availability_score: float
@@ -391,6 +404,21 @@ class TeamRecommendationResponse(BaseModel):
     missing_team_competencies: List[str]
     selected_team: List[CandidateMatch]
     all_ranked_candidates: List[CandidateMatch]
+
+
+class AssignSquadRequest(BaseModel):
+    project_id: int
+    employee_ids: List[int]
+    hours_per_member: Optional[int] = 20  # Hours to assign to this project per member
+
+
+class AssignSquadResponse(BaseModel):
+    success: bool
+    project_id: int
+    project_name: str
+    assigned_count: int
+    updated_employees: List[EmployeeOut]
+    message: str
 
 
 class WorkloadStatsResponse(BaseModel):
@@ -433,7 +461,7 @@ class SkillGapResponse(BaseModel):
 
 
 # ---------------------------------------------------------
-# Helper Functions: Cosine / Intersection Similarity Engine
+# Exact Real-Time Python Algorithmic Scoring Engine
 # ---------------------------------------------------------
 def parse_skills(skills_str: str) -> List[str]:
     if not skills_str:
@@ -441,42 +469,77 @@ def parse_skills(skills_str: str) -> List[str]:
     return [s.strip() for s in skills_str.split(",") if s.strip()]
 
 
-def calculate_skill_similarity(candidate_skills: List[str], required_skills: List[str]) -> tuple[float, List[str], List[str]]:
+def calculate_realtime_scores(
+    candidate_skills: List[str],
+    required_skills: List[str],
+    candidate_exp: float,
+    required_exp: float,
+    current_workload_hours: int,
+    max_hours: int
+) -> tuple[float, float, float, float, List[str], List[str]]:
     """
-    Computes normalized skill intersection / cosine overlap.
-    Returns (score_ratio, matched_skills, missing_skills)
+    Implements real-time mathematical scoring function:
+    Score = (skills_matched / skills_required * 50) + (experience_score * 25) + (availability_score * 25)
+    
+    Returns:
+    (composite_score, skill_score_out_of_50, exp_score_out_of_25, avail_score_out_of_25, matched_skills, missing_skills)
     """
-    if not required_skills:
-        return 1.0, candidate_skills, []
+    cand_skills_lower = {s.lower(): s for s in candidate_skills}
+    matched_skills = []
 
-    req_set = {s.lower() for s in required_skills}
-    cand_map = {s.lower(): s for s in candidate_skills}
-
-    matched = []
-    for r in required_skills:
-        if r.lower() in cand_map:
-            matched.append(cand_map[r.lower()])
+    for req in required_skills:
+        req_clean = req.strip()
+        req_lower = req_clean.lower()
+        if req_lower in cand_skills_lower:
+            matched_skills.append(cand_skills_lower[req_lower])
         else:
-            # Substring matching (e.g. "React" matches "React Native", "Cloud" matches "Cloud Computing")
-            for c_low, c_orig in cand_map.items():
-                if r.lower() in c_low or c_low in r.lower():
-                    matched.append(c_orig)
+            # Substring match (e.g. 'Cloud' in 'Cloud Computing' or 'React' in 'React Native')
+            for c_low, c_orig in cand_skills_lower.items():
+                if req_lower in c_low or c_low in req_lower:
+                    matched_skills.append(c_orig)
                     break
 
-    matched = list(dict.fromkeys(matched))
-    missing = [r for r in required_skills if not any(r.lower() == m.lower() or r.lower() in m.lower() or m.lower() in r.lower() for m in matched)]
+    matched_skills = list(dict.fromkeys(matched_skills))
+    missing_skills = [
+        req for req in required_skills
+        if not any(req.lower() == m.lower() or req.lower() in m.lower() or m.lower() in req.lower() for m in matched_skills)
+    ]
 
-    # Cosine-like normalized similarity: |A ∩ B| / sqrt(|A| * |B|) or straight recall ratio
-    # For workforce matching, coverage of required skills is paramount
-    coverage_ratio = len(matched) / len(required_skills)
-    # Give slight bonus for rich skill sets (cosine similarity blending)
-    if candidate_skills:
-        cosine_sim = len(matched) / (math.sqrt(len(required_skills)) * math.sqrt(len(candidate_skills)))
+    # 1. Skill Component: (skills_matched / skills_required * 50)
+    if len(required_skills) > 0:
+        skill_ratio = min(1.0, len(matched_skills) / len(required_skills))
     else:
-        cosine_sim = 0.0
+        skill_ratio = 1.0
+    skill_component = skill_ratio * 50.0
 
-    blended_skill_score = 0.75 * coverage_ratio + 0.25 * min(1.0, cosine_sim * 1.4)
-    return min(1.0, blended_skill_score), matched, missing
+    # 2. Experience Component: (min(candidate_exp / required_exp, 1.0) * 25)
+    exp_ratio = min(1.0, candidate_exp / max(required_exp, 0.5))
+    experience_component = exp_ratio * 25.0
+
+    # 3. Availability Component: based on live remaining capacity (out of 25)
+    utilization = (current_workload_hours / max(max_hours, 1)) * 100.0
+    if utilization >= 90.0:
+        avail_ratio = 0.10  # Severe penalty for critical burnout
+    elif utilization >= 85.0:
+        avail_ratio = 0.35  # High workload warning
+    elif utilization <= 40.0:
+        avail_ratio = 1.00  # Bench talent is immediately available
+    else:
+        # Linearly proportional between 40% and 85%
+        avail_ratio = 0.85 - ((utilization - 40.0) / 45.0) * 0.45
+    availability_component = max(0.0, avail_ratio) * 25.0
+
+    # Final Composite Match Score (0 to 100)
+    composite = round(skill_component + experience_component + availability_component, 1)
+
+    return (
+        composite,
+        round((skill_component / 50.0) * 100.0, 1),
+        round((experience_component / 25.0) * 100.0, 1),
+        round((availability_component / 25.0) * 100.0, 1),
+        matched_skills,
+        missing_skills
+    )
 
 
 # ---------------------------------------------------------
@@ -485,12 +548,12 @@ def calculate_skill_similarity(candidate_skills: List[str], required_skills: Lis
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "app": "WorkforceIQ", "version": "1.0.0"}
+    return {"status": "ok", "app": "Workforce Intelligence Platform", "version": "1.1.0"}
 
 
 @app.get("/api/employees", response_model=List[EmployeeOut])
 def get_employees(db: Session = Depends(get_db)):
-    """Fetch all employees and their workload stats."""
+    """Fetch all employees and live calculated workload stats."""
     employees = db.query(EmployeeModel).all()
     results = []
     for emp in employees:
@@ -510,6 +573,54 @@ def get_employees(db: Session = Depends(get_db)):
     return results
 
 
+@app.post("/api/employees", response_model=EmployeeOut)
+def create_employee(emp_in: EmployeeCreate, db: Session = Depends(get_db)):
+    """Interactive CRUD: Add a brand-new employee to SQLite DB."""
+    # Check email duplicate
+    existing = db.query(EmployeeModel).filter(EmployeeModel.email == emp_in.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Employee with email {emp_in.email} already exists.")
+
+    current_hours = emp_in.current_workload_hours or 0
+    max_h = emp_in.max_hours or 40
+    util = (current_hours / max(max_h, 1)) * 100.0
+
+    # Auto-assign initial status based on hours
+    if util > 85.0:
+        status_val = "Busy"
+    elif util >= 40.0:
+        status_val = "Partially Allocated"
+    else:
+        status_val = "Available"
+
+    new_emp = EmployeeModel(
+        name=emp_in.name,
+        email=emp_in.email,
+        role=emp_in.role,
+        skills=", ".join([s.strip() for s in emp_in.skills]),
+        experience_years=emp_in.experience_years,
+        max_hours=max_h,
+        current_workload_hours=current_hours,
+        status=status_val
+    )
+    db.add(new_emp)
+    db.commit()
+    db.refresh(new_emp)
+
+    return EmployeeOut(
+        id=new_emp.id,
+        name=new_emp.name,
+        email=new_emp.email,
+        role=new_emp.role,
+        skills=parse_skills(new_emp.skills),
+        experience_years=new_emp.experience_years,
+        max_hours=new_emp.max_hours,
+        current_workload_hours=new_emp.current_workload_hours,
+        utilization_pct=round(util, 1),
+        status=new_emp.status
+    )
+
+
 @app.get("/api/projects", response_model=List[ProjectOut])
 def get_projects(db: Session = Depends(get_db)):
     """Fetch all projects."""
@@ -527,12 +638,35 @@ def get_projects(db: Session = Depends(get_db)):
     ]
 
 
+@app.post("/api/projects", response_model=ProjectOut)
+def create_project(proj_in: ProjectCreate, db: Session = Depends(get_db)):
+    """Interactive CRUD: Add a custom project to SQLite DB and enable real-time matching."""
+    new_proj = ProjectModel(
+        name=proj_in.name,
+        description=proj_in.description,
+        required_skills=", ".join([s.strip() for s in proj_in.required_skills]),
+        required_experience=proj_in.required_experience,
+        status="Planning"
+    )
+    db.add(new_proj)
+    db.commit()
+    db.refresh(new_proj)
+
+    return ProjectOut(
+        id=new_proj.id,
+        name=new_proj.name,
+        description=new_proj.description,
+        required_skills=parse_skills(new_proj.required_skills),
+        required_experience=new_proj.required_experience,
+        status=new_proj.status
+    )
+
+
 @app.post("/api/match-team", response_model=TeamRecommendationResponse)
 def match_team(request: MatchRequest, db: Session = Depends(get_db)):
     """
-    Accept { "project_id": int } or custom skills,
-    calculate match scores based on skill intersection, experience, and availability,
-    and return the best team recommendation.
+    Algorithmic Real-Time Python Matching Engine:
+    Score = (skills_matched / skills_required * 50) + (experience_score * 25) + (availability_score * 25)
     """
     required_skills = []
     required_exp = request.custom_experience or 3.0
@@ -556,40 +690,37 @@ def match_team(request: MatchRequest, db: Session = Depends(get_db)):
 
     for emp in employees:
         emp_skills = parse_skills(emp.skills)
-        skill_score, matched_skills, missing_skills = calculate_skill_similarity(emp_skills, required_skills)
-        
-        # Experience score: ratio up to 1.0 (with slight boost if exceeding required)
-        exp_ratio = min(1.0, emp.experience_years / max(required_exp, 1.0))
-        
-        # Availability score: 
-        # Overloaded (>85%) gets severe penalty; underutilized or optimal gets high score
-        utilization = (emp.current_workload_hours / max(emp.max_hours, 1.0)) * 100
+        (
+            composite,
+            skill_pct,
+            exp_pct,
+            avail_pct,
+            matched,
+            missing
+        ) = calculate_realtime_scores(
+            candidate_skills=emp_skills,
+            required_skills=required_skills,
+            candidate_exp=emp.experience_years,
+            required_exp=required_exp,
+            current_workload_hours=emp.current_workload_hours,
+            max_hours=emp.max_hours
+        )
+
+        utilization = (emp.current_workload_hours / max(emp.max_hours, 1)) * 100.0
         avail_hours = max(0, emp.max_hours - emp.current_workload_hours)
 
+        warning = None
         if utilization >= 90:
-            avail_score = 0.15
             warning = "Critical Burnout Risk (>90% Allocated)"
         elif utilization >= 85:
-            avail_score = 0.35
             warning = "High Workload Warning (>85% Allocated)"
-        elif utilization <= 40:
-            avail_score = 1.0  # Bench talent is ready for deployment
-            warning = None
-        else:
-            avail_score = 0.85
-            warning = None
-
-        # Composite weighted score:
-        # 50% Skill Match, 25% Experience, 25% Availability
-        composite = (0.50 * skill_score) + (0.25 * exp_ratio) + (0.25 * avail_score)
-        match_percentage = round(composite * 100, 1)
 
         # Fit assessment label
-        if match_percentage >= 80:
+        if composite >= 75:
             fit = "Prime Match"
-        elif match_percentage >= 60:
+        elif composite >= 55:
             fit = "Strong Contender"
-        elif match_percentage >= 40:
+        elif composite >= 40:
             fit = "Moderate Fit"
         else:
             fit = "Low Fit"
@@ -604,24 +735,24 @@ def match_team(request: MatchRequest, db: Session = Depends(get_db)):
             current_workload_hours=emp.current_workload_hours,
             available_hours=avail_hours,
             status=emp.status,
-            match_score=match_percentage,
-            skill_match_score=round(skill_score * 100, 1),
-            experience_score=round(exp_ratio * 100, 1),
-            availability_score=round(avail_score * 100, 1),
-            matched_skills=matched_skills,
-            missing_skills=missing_skills,
+            match_score=composite,
+            skill_match_score=skill_pct,
+            experience_score=exp_pct,
+            availability_score=avail_pct,
+            matched_skills=matched,
+            missing_skills=missing,
             all_skills=emp_skills,
             fit_assessment=fit,
             warning=warning
         ))
 
-    # Sort descending by match score
+    # Sort candidates strictly by real-time composite score descending
     candidate_scores.sort(key=lambda c: c.match_score, reverse=True)
 
     team_size = request.team_size or 3
     selected_team = candidate_scores[:team_size]
 
-    # Calculate overall team readiness and combined missing competencies
+    # Check overall team competency coverage
     combined_team_skills = set()
     for member in selected_team:
         for s in member.all_skills:
@@ -634,8 +765,6 @@ def match_team(request: MatchRequest, db: Session = Depends(get_db)):
             missing_team_competencies.append(req)
 
     avg_team_score = sum(m.match_score for m in selected_team) / max(len(selected_team), 1)
-    
-    # Penalize team readiness if core skills are missing across the assembled group
     if required_skills:
         team_coverage_ratio = (len(required_skills) - len(missing_team_competencies)) / len(required_skills)
         overall_team_readiness = round((0.6 * avg_team_score) + (0.4 * (team_coverage_ratio * 100)), 1)
@@ -655,11 +784,71 @@ def match_team(request: MatchRequest, db: Session = Depends(get_db)):
     )
 
 
+@app.post("/api/assign-squad", response_model=AssignSquadResponse)
+def assign_squad(req: AssignSquadRequest, db: Session = Depends(get_db)):
+    """
+    Dynamic DB State Changes:
+    Assigns selected squad members to a project, updating their current_workload_hours in SQLite.
+    Instantly shifts status:
+    - If new utilization > 85% -> 'Busy'
+    - If 40% - 85% -> 'Partially Allocated'
+    - If < 40% -> 'Available'
+    And marks project status to 'Active'.
+    """
+    project = db.query(ProjectModel).filter(ProjectModel.id == req.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    updated_employees = []
+    hours_to_add = req.hours_per_member or 15
+
+    for emp_id in req.employee_ids:
+        emp = db.query(EmployeeModel).filter(EmployeeModel.id == emp_id).first()
+        if emp:
+            # Increase employee workload hours
+            emp.current_workload_hours = min(emp.max_hours, emp.current_workload_hours + hours_to_add)
+            util = (emp.current_workload_hours / max(emp.max_hours, 1)) * 100.0
+
+            # Dynamic state transition
+            if util > 85.0:
+                emp.status = "Busy"
+            elif util >= 40.0:
+                emp.status = "Partially Allocated"
+            else:
+                emp.status = "Available"
+
+            updated_employees.append(EmployeeOut(
+                id=emp.id,
+                name=emp.name,
+                email=emp.email,
+                role=emp.role,
+                skills=parse_skills(emp.skills),
+                experience_years=emp.experience_years,
+                max_hours=emp.max_hours,
+                current_workload_hours=emp.current_workload_hours,
+                utilization_pct=round(util, 1),
+                status=emp.status
+            ))
+
+    # Update project status
+    project.status = "Active"
+    db.commit()
+
+    return AssignSquadResponse(
+        success=True,
+        project_id=project.id,
+        project_name=project.name,
+        assigned_count=len(updated_employees),
+        updated_employees=updated_employees,
+        message=f"Successfully deployed {len(updated_employees)} specialists to '{project.name}'. Workloads updated live in SQLite database!"
+    )
+
+
 @app.get("/api/workload-stats", response_model=WorkloadStatsResponse)
 def get_workload_stats(db: Session = Depends(get_db)):
     """
     Return workforce utilization metrics,
-    flagging overloaded (>85%) and underutilized (<40%) staff.
+    flagging overloaded (>85%) and underutilized (<40%) staff for live heatmaps.
     """
     employees = db.query(EmployeeModel).all()
     overloaded = []
@@ -709,7 +898,7 @@ def get_workload_stats(db: Session = Depends(get_db)):
 @app.post("/api/reallocate", response_model=List[ReallocationSuggestion])
 def reallocate_workload(db: Session = Depends(get_db)):
     """
-    Suggest task shift recommendations for workload balancing:
+    Suggest task shift recommendations to balance workloads:
     Pairs overloaded staff (>85%) with underutilized staff (<40%) sharing compatible skills.
     """
     employees = db.query(EmployeeModel).all()
@@ -717,7 +906,7 @@ def reallocate_workload(db: Session = Depends(get_db)):
     underutilized = []
 
     for emp in employees:
-        util = (emp.current_workload_hours / max(emp.max_hours, 1)) * 100
+        util = (emp.current_workload_hours / max(emp.max_hours, 1)) * 100.0
         if util > 85.0:
             overloaded.append(emp)
         elif util < 40.0:
@@ -727,12 +916,11 @@ def reallocate_workload(db: Session = Depends(get_db)):
 
     for high in overloaded:
         high_skills = {s.lower(): s for s in parse_skills(high.skills)}
-        high_excess = high.current_workload_hours - int(high.max_hours * 0.75) # Bring down to ~75%
+        high_excess = high.current_workload_hours - int(high.max_hours * 0.75)
 
         if high_excess <= 0:
             continue
 
-        # Look for the best underutilized candidate with overlapping skills
         best_candidate = None
         best_overlap: List[str] = []
 
@@ -744,13 +932,12 @@ def reallocate_workload(db: Session = Depends(get_db)):
                     best_candidate = low
                     best_overlap = overlap
 
-        # If no skill overlap found, pick the underutilized employee with most capacity
         if not best_candidate and underutilized:
             best_candidate = min(underutilized, key=lambda e: e.current_workload_hours)
             best_overlap = ["Cross-training / General Engineering"]
 
         if best_candidate:
-            shift_hours = min(high_excess, 12, best_candidate.max_hours - best_candidate.current_workload_hours - 10)
+            shift_hours = min(high_excess, 12, max(4, best_candidate.max_hours - best_candidate.current_workload_hours - 5))
             if shift_hours <= 0:
                 shift_hours = 6
 
@@ -782,18 +969,53 @@ def reallocate_workload(db: Session = Depends(get_db)):
     return suggestions
 
 
+@app.post("/api/apply-shift")
+def apply_workload_shift(from_id: int, to_id: int, hours: int, db: Session = Depends(get_db)):
+    """Dynamic DB state change: Applies an actual workload shift in SQLite."""
+    from_emp = db.query(EmployeeModel).filter(EmployeeModel.id == from_id).first()
+    to_emp = db.query(EmployeeModel).filter(EmployeeModel.id == to_id).first()
+
+    if not from_emp or not to_emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    from_emp.current_workload_hours = max(0, from_emp.current_workload_hours - hours)
+    to_emp.current_workload_hours = min(to_emp.max_hours, to_emp.current_workload_hours + hours)
+
+    # Re-evaluate statuses
+    for emp in [from_emp, to_emp]:
+        util = (emp.current_workload_hours / max(emp.max_hours, 1)) * 100.0
+        if util > 85.0:
+            emp.status = "Busy"
+        elif util >= 40.0:
+            emp.status = "Partially Allocated"
+        else:
+            emp.status = "Available"
+
+    db.commit()
+    return {
+        "success": True,
+        "message": f"Successfully shifted {hours}h from {from_emp.name} to {to_emp.name} in SQLite database!",
+        "from_employee": {
+            "name": from_emp.name,
+            "workload": from_emp.current_workload_hours,
+            "status": from_emp.status
+        },
+        "to_employee": {
+            "name": to_emp.name,
+            "workload": to_emp.current_workload_hours,
+            "status": to_emp.status
+        }
+    }
+
+
 @app.get("/api/skill-gaps/{project_id}", response_model=SkillGapResponse)
 def get_project_skill_gaps(project_id: int, db: Session = Depends(get_db)):
-    """
-    Detailed skill-gap report for a project paired with automated training recommendations.
-    """
+    """Skill-gap report for a project paired with automated training recommendations."""
     proj = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found.")
 
     required_skills = parse_skills(proj.required_skills)
-    
-    # Get all active available or partially allocated employees
     employees = db.query(EmployeeModel).all()
     org_skills = set()
     for e in employees:
@@ -809,7 +1031,6 @@ def get_project_skill_gaps(project_id: int, db: Session = Depends(get_db)):
         else:
             missing.append(req)
 
-    # Fetch training modules for required skills
     trainings = db.query(TrainingModuleModel).all()
     training_map = {}
     for t in trainings:
@@ -825,7 +1046,6 @@ def get_project_skill_gaps(project_id: int, db: Session = Depends(get_db)):
         if skill_l in training_map:
             recommendations.append(training_map[skill_l])
         else:
-            # Fallback training entry
             recommendations.append({
                 "skill": skill,
                 "course": f"Advanced {skill} Professional Certification",
@@ -843,18 +1063,3 @@ def get_project_skill_gaps(project_id: int, db: Session = Depends(get_db)):
         coverage_percentage=coverage_pct,
         recommended_training=recommendations
     )
-
-
-@app.get("/api/training-modules")
-def get_training_modules(db: Session = Depends(get_db)):
-    """Fetch all available training and certification tracks."""
-    modules = db.query(TrainingModuleModel).all()
-    return [
-        {
-            "id": m.id,
-            "skill_name": m.skill_name,
-            "course_name": m.course_name,
-            "provider": m.provider
-        }
-        for m in modules
-    ]
