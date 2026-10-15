@@ -16,7 +16,11 @@ import {
   Check,
   CheckCheck,
   UserCheck,
-  Plus
+  Plus,
+  HelpCircle,
+  Info,
+  X,
+  Lock
 } from "lucide-react";
 import CreateEntityModal from "../../components/CreateEntityModal";
 
@@ -73,6 +77,7 @@ export default function TeamFormationPage() {
   const [assigning, setAssigning] = useState<boolean>(false);
   const [assignedSuccessMsg, setAssignedSuccessMsg] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [methodologyOpen, setMethodologyOpen] = useState<boolean>(false);
 
   useEffect(() => {
     loadProjects();
@@ -220,32 +225,34 @@ export default function TeamFormationPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-scarlet/10 text-scarlet font-bold text-xs shadow-clay-pill mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Scenario A • Algorithmic Matching & Dynamic State Shifts</span>
+            <span>Scenario A • Squad-Level Optimization & Skill Synthesis</span>
           </div>
           <h1 className="text-3xl font-black text-charcoal tracking-tight">
             Smart Team Formation
           </h1>
-          <p className="text-xs md:text-sm font-medium text-charcoal-muted mt-1">
-            Real-time scoring: <code className="bg-ivory-200 px-2 py-0.5 rounded font-mono text-scarlet font-bold">(skills_matched / skills_required * 50) + (experience * 25) + (availability * 25)</code>
-          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <p className="text-xs md:text-sm font-medium text-charcoal-muted">
+              AI-driven squad solver optimizing team skill coverage and availability.
+            </p>
+            <button
+              onClick={() => setMethodologyOpen(true)}
+              className="inline-flex items-center gap-1 text-xs font-bold text-scarlet hover:text-scarlet-dark transition-colors px-2 py-0.5 rounded bg-scarlet/5 border border-scarlet/20 hover:bg-scarlet/10 cursor-pointer"
+              title="Click to view algorithmic scoring model details"
+            >
+              <Info className="w-3.5 h-3.5" />
+              <span>Scoring Methodology</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setModalOpen(true)}
-            className="clay-btn-secondary px-5 py-3 text-xs md:text-sm font-bold flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4 text-scarlet" />
-            <span>Add Custom Entity</span>
-          </button>
-
+        <div className="flex items-center gap-3">
           <button
             onClick={() => fetchTeam(selectedProjectId, teamSize)}
             disabled={loading}
-            className="clay-btn-primary px-6 py-3 text-xs md:text-sm font-bold flex items-center gap-2"
+            className="clay-btn-primary px-5 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2 cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            <span>{loading ? "Matching..." : "Recalculate Match"}</span>
+            <span>{loading ? "Optimizing Squad..." : "Recalculate Squad"}</span>
           </button>
         </div>
       </div>
@@ -338,18 +345,38 @@ export default function TeamFormationPage() {
               ))}
             </div>
 
-            {/* Deploy Squad Action Button */}
-            <button
-              onClick={handleAssignSquad}
-              disabled={assigning || !recommendation}
-              className="clay-btn-primary px-6 py-2.5 text-xs font-black flex items-center gap-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 shadow-clay-btn"
-            >
-              <UserCheck className="w-4 h-4 stroke-[2.5]" />
-              <span>{assigning ? "Updating Database..." : "Deploy Squad to Project"}</span>
-            </button>
+            {/* Deploy Squad Action Button with Invalid Deployment Enforcement */}
+            <div className="flex items-center gap-3">
+              {recommendation && recommendation.missing_team_competencies.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Resolve {recommendation.missing_team_competencies.length} critical skill gap{recommendation.missing_team_competencies.length > 1 ? "s" : ""} before deploying</span>
+                  </span>
+                  <button
+                    disabled={true}
+                    className="px-5 py-2 text-xs font-bold rounded-lg bg-charcoal/15 text-charcoal/40 border border-charcoal/10 cursor-not-allowed flex items-center gap-2"
+                    title="All required competencies must be covered before deployment"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    <span>Deploy Squad</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleAssignSquad}
+                  disabled={assigning || !recommendation}
+                  className="px-5 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <UserCheck className="w-4 h-4 stroke-[2.5]" />
+                  <span>{assigning ? "Updating Database..." : "Deploy Squad to Project"}</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
       </motion.div>
+
 
       {/* Key Metrics Banner */}
       {recommendation && (
@@ -668,6 +695,94 @@ export default function TeamFormationPage() {
         </div>
       </div>
 
+      {/* Scoring Methodology Modal */}
+      <AnimatePresence>
+        {methodologyOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/50 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="clay-card bg-white max-w-xl w-full p-6 md:p-8 space-y-5 shadow-clay-lg relative border border-charcoal/10"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-charcoal/10">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-scarlet/10 text-scarlet flex items-center justify-center">
+                    <Info className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-charcoal">
+                      Scoring & Selection Methodology
+                    </h3>
+                    <p className="text-xs text-charcoal-muted">
+                      Mathematical criteria for squad synthesis & candidate ranking
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMethodologyOpen(false)}
+                  className="p-1 rounded-lg text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs md:text-sm text-charcoal/80 leading-relaxed">
+                <div className="p-3.5 rounded-lg bg-ivory border border-charcoal/10 space-y-1">
+                  <div className="font-bold text-charcoal flex items-center justify-between">
+                    <span>1. Skill Coverage (50% Weight)</span>
+                    <span className="text-scarlet font-black">50 pts max</span>
+                  </div>
+                  <p className="text-xs text-charcoal-muted">
+                    Ratio of project required skills matched by candidate proficiencies: <br />
+                    <code className="text-charcoal font-semibold">(skills_matched / skills_required) × 50</code>
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-ivory border border-charcoal/10 space-y-1">
+                  <div className="font-bold text-charcoal flex items-center justify-between">
+                    <span>2. Strict Experience Threshold (25% Weight)</span>
+                    <span className="text-scarlet font-black">25 pts max</span>
+                  </div>
+                  <p className="text-xs text-charcoal-muted">
+                    Engineers meeting or exceeding required tenure receive full points. Candidates below the threshold receive strict sub-linear penalties to prevent under-qualified staff from ranking #1.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-ivory border border-charcoal/10 space-y-1">
+                  <div className="font-bold text-charcoal flex items-center justify-between">
+                    <span>3. Hard Burnout Filter & Availability (25% Weight)</span>
+                    <span className="text-scarlet font-black">25 pts max</span>
+                  </div>
+                  <p className="text-xs text-charcoal-muted">
+                    Personnel with &gt;85% workload receive zero availability points and are disqualified from auto-selection squads to prevent organizational burnout.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
+                  <div className="font-bold text-emerald-900 flex items-center justify-between">
+                    <span>4. Squad-Level Optimization (Whole Team Cover)</span>
+                    <span className="text-emerald-700 font-bold">Combinatorial Cover</span>
+                  </div>
+                  <p className="text-xs text-emerald-800">
+                    Rather than picking isolated individuals, the engine executes a greedy set-cover to guarantee all project competencies (e.g. React, Cloud, Python) are satisfied across the assembled squad.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setMethodologyOpen(false)}
+                  className="px-5 py-2 rounded-lg bg-charcoal text-white text-xs font-bold hover:bg-charcoal-900 cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* CRUD Modal */}
       <CreateEntityModal
         isOpen={modalOpen}
@@ -676,5 +791,6 @@ export default function TeamFormationPage() {
         onProjectCreated={(newId) => loadProjects(newId)}
       />
     </main>
+
   );
 }

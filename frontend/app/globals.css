@@ -16,55 +16,56 @@ body {
   overflow-x: hidden;
 }
 
-/* Claymorphic 3D Rounded Utility Classes with Scarlet Red Accents */
+/* Refined 3D Utility Classes with Calmed Shadows and Subtle Borders */
 .clay-card {
   background: #FFFFFF;
-  border-radius: 28px;
-  box-shadow: 14px 18px 36px rgba(22, 23, 27, 0.07), -10px -10px 24px rgba(255, 255, 255, 0.95), inset 2px 2px 4px rgba(255, 255, 255, 0.8), inset -3px -3px 8px rgba(22, 23, 27, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(22, 23, 27, 0.05), 0 1px 3px rgba(22, 23, 27, 0.03);
+  border: 1px solid rgba(22, 23, 27, 0.08);
+  transition: all 0.2s ease-in-out;
 }
 
 .clay-card:hover {
-  transform: translateY(-4px) scale(1.008);
-  box-shadow: 18px 24px 44px rgba(22, 23, 27, 0.11), -12px -12px 30px rgba(255, 255, 255, 1), inset 2px 2px 5px rgba(255, 255, 255, 0.9), inset -4px -4px 10px rgba(22, 23, 27, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(22, 23, 27, 0.08), 0 2px 6px rgba(22, 23, 27, 0.04);
 }
 
 .clay-btn-primary {
-  background: linear-gradient(135deg, #EF4444 0%, #DC2626 60%, #B91C1C 100%);
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   color: #FFFFFF;
-  border-radius: 9999px;
-  box-shadow: 6px 8px 20px rgba(220, 38, 38, 0.38), -4px -4px 14px rgba(255, 255, 255, 0.8), inset 2px 2px 4px rgba(255, 255, 255, 0.4), inset -2px -2px 6px rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(220, 38, 38, 0.4);
   font-weight: 700;
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.18s ease-in-out;
 }
 
 .clay-btn-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 8px 12px 24px rgba(220, 38, 38, 0.48), -5px -5px 16px rgba(255, 255, 255, 0.9), inset 2px 2px 5px rgba(255, 255, 255, 0.5), inset -3px -3px 8px rgba(0, 0, 0, 0.32);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28);
 }
 
 .clay-btn-primary:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: 2px 3px 8px rgba(220, 38, 38, 0.3), inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.2);
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.2);
 }
 
 .clay-btn-secondary {
   background: #FFFFFF;
   color: #16171B;
-  border-radius: 9999px;
-  box-shadow: 5px 7px 16px rgba(22, 23, 27, 0.08), -4px -4px 12px rgba(255, 255, 255, 0.9), inset 2px 2px 3px rgba(255, 255, 255, 0.8), inset -2px -2px 4px rgba(22, 23, 27, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(22, 23, 27, 0.08);
+  border: 1px solid rgba(22, 23, 27, 0.12);
   font-weight: 700;
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.18s ease-in-out;
 }
 
 .clay-btn-secondary:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   background: #FAF8F5;
-  box-shadow: 7px 10px 20px rgba(22, 23, 27, 0.12), -5px -5px 14px rgba(255, 255, 255, 1);
+  box-shadow: 0 3px 8px rgba(22, 23, 27, 0.1);
 }
+
 
 .clay-badge {
   background: #FFFFFF;
