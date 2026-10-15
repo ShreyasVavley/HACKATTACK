@@ -69,9 +69,9 @@ def seed_database(db: Session):
 
     sample_employees = [
         EmployeeModel(
-            name="Aria Montgomery",
-            email="aria.m@workforceiq.internal",
-            role="Senior Cloud Architect",
+            name="Aarav Sharma",
+            email="aarav.sharma@workforceiq.internal",
+            role="Principal Cloud & DevOps Architect",
             skills="Cloud Computing, Python, Kubernetes, AWS, Terraform, Docker",
             experience_years=8.5,
             max_hours=40,
@@ -79,9 +79,9 @@ def seed_database(db: Session):
             status="Busy"
         ),
         EmployeeModel(
-            name="Devon Vance",
-            email="devon.v@workforceiq.internal",
-            role="Full Stack Engineer",
+            name="Diya Patel",
+            email="diya.patel@workforceiq.internal",
+            role="Senior Full Stack Engineer",
             skills="React, TypeScript, Python, Node.js, GraphQL, PostgreSQL",
             experience_years=5.0,
             max_hours=40,
@@ -89,9 +89,9 @@ def seed_database(db: Session):
             status="Partially Allocated"
         ),
         EmployeeModel(
-            name="Elena Rostova",
-            email="elena.r@workforceiq.internal",
-            role="Staff ML / Data Scientist",
+            name="Arjun Nambiar",
+            email="arjun.nambiar@workforceiq.internal",
+            role="Staff ML & AI Scientist",
             skills="Python, Data Analytics, Machine Learning, PyTorch, SQL, Cloud Computing",
             experience_years=7.2,
             max_hours=40,
@@ -99,9 +99,9 @@ def seed_database(db: Session):
             status="Busy"
         ),
         EmployeeModel(
-            name="Marcus Chen",
-            email="marcus.c@workforceiq.internal",
-            role="Backend Specialist",
+            name="Ananya Iyer",
+            email="ananya.iyer@workforceiq.internal",
+            role="Backend Systems Specialist",
             skills="Java, Spring Boot, Microservices, Docker, Kubernetes, SQL",
             experience_years=6.0,
             max_hours=40,
@@ -109,9 +109,9 @@ def seed_database(db: Session):
             status="Available"
         ),
         EmployeeModel(
-            name="Sofia Patel",
-            email="sofia.p@workforceiq.internal",
-            role="Frontend UI/UX Engineer",
+            name="Ishaan Mukherjee",
+            email="ishaan.m@workforceiq.internal",
+            role="Frontend UI/UX Specialist",
             skills="React, Next.js, Tailwind CSS, TypeScript, UI/UX, Figma",
             experience_years=4.2,
             max_hours=40,
@@ -119,9 +119,9 @@ def seed_database(db: Session):
             status="Available"
         ),
         EmployeeModel(
-            name="Liam Gallagher",
-            email="liam.g@workforceiq.internal",
-            role="DevOps & Reliability Engineer",
+            name="Kavya Sundaram",
+            email="kavya.s@workforceiq.internal",
+            role="DevOps & Site Reliability Engineer",
             skills="Cloud Computing, Docker, CI/CD, Terraform, Linux, Python",
             experience_years=5.5,
             max_hours=40,
@@ -129,8 +129,8 @@ def seed_database(db: Session):
             status="Partially Allocated"
         ),
         EmployeeModel(
-            name="Zara Ibrahim",
-            email="zara.i@workforceiq.internal",
+            name="Vihaan Reddy",
+            email="vihaan.reddy@workforceiq.internal",
             role="Junior Data Analyst",
             skills="Data Analytics, Python, Tableau, SQL, Excel, Statistics",
             experience_years=2.1,
@@ -139,9 +139,9 @@ def seed_database(db: Session):
             status="Available"
         ),
         EmployeeModel(
-            name="Lucas Morales",
-            email="lucas.m@workforceiq.internal",
-            role="Principal Enterprise Architect",
+            name="Aditi Deshmukh",
+            email="aditi.d@workforceiq.internal",
+            role="Distinguished Enterprise Architect",
             skills="Java, Cloud Computing, System Design, Microservices, Security, Python",
             experience_years=11.0,
             max_hours=40,
@@ -149,9 +149,9 @@ def seed_database(db: Session):
             status="Busy"
         ),
         EmployeeModel(
-            name="Hannah Schmidt",
-            email="hannah.s@workforceiq.internal",
-            role="React & Mobile Developer",
+            name="Rohan Verma",
+            email="rohan.verma@workforceiq.internal",
+            role="React & Mobile Frontend Developer",
             skills="React, React Native, JavaScript, Tailwind CSS, REST APIs",
             experience_years=3.5,
             max_hours=40,
@@ -159,9 +159,9 @@ def seed_database(db: Session):
             status="Available"
         ),
         EmployeeModel(
-            name="Tariq Al-Mansoor",
-            email="tariq.a@workforceiq.internal",
-            role="Platform Data Engineer",
+            name="Pooja Kulkarni",
+            email="pooja.k@workforceiq.internal",
+            role="Platform Data Pipeline Engineer",
             skills="Data Analytics, Python, Apache Kafka, Spark, SQL, AWS",
             experience_years=6.8,
             max_hours=40,
@@ -169,9 +169,9 @@ def seed_database(db: Session):
             status="Busy"
         ),
         EmployeeModel(
-            name="Chloe Dubois",
-            email="chloe.d@workforceiq.internal",
-            role="Cybersecurity & Cloud Ops",
+            name="Siddharth Rao",
+            email="siddharth.rao@workforceiq.internal",
+            role="Cloud Security & SecOps Lead",
             skills="Security, Cloud Computing, AWS, Linux, Python, CI/CD",
             experience_years=4.8,
             max_hours=40,
@@ -179,14 +179,34 @@ def seed_database(db: Session):
             status="Partially Allocated"
         ),
         EmployeeModel(
-            name="Rohan Verma",
-            email="rohan.v@workforceiq.internal",
-            role="Java & Cloud Backend Developer",
+            name="Meera Nair",
+            email="meera.nair@workforceiq.internal",
+            role="Java & Cloud Backend Specialist",
             skills="Java, Python, Cloud Computing, Kubernetes, Spring Boot",
             experience_years=3.8,
             max_hours=40,
             current_workload_hours=15,
             status="Available"
+        ),
+        EmployeeModel(
+            name="Kabir Chawla",
+            email="kabir.c@workforceiq.internal",
+            role="AI Agents & Distributed Systems Engineer",
+            skills="Python, Machine Learning, Docker, Kubernetes, REST APIs",
+            experience_years=4.5,
+            max_hours=40,
+            current_workload_hours=14,
+            status="Available"
+        ),
+        EmployeeModel(
+            name="Tanvi Bhattacharya",
+            email="tanvi.b@workforceiq.internal",
+            role="Full Stack & Next.js Engineer",
+            skills="React, Next.js, Node.js, TypeScript, Tailwind CSS, PostgreSQL",
+            experience_years=4.0,
+            max_hours=40,
+            current_workload_hours=26,
+            status="Partially Allocated"
         )
     ]
 

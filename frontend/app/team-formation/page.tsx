@@ -524,22 +524,49 @@ export default function TeamFormationPage() {
                   </div>
                 </div>
 
-                {/* Card Footer */}
+                {/* Card Footer with Direct Interactive Assignment */}
                 <div className="mt-5 pt-3 border-t border-charcoal/10 flex items-center justify-between text-xs">
-                  <span className="text-charcoal-muted font-medium truncate max-w-[170px]">
+                  <span className="text-charcoal-muted font-medium truncate max-w-[140px]">
                     {cand.email}
                   </span>
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                      cand.status === "Available"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : cand.status === "Partially Allocated"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-rose-100 text-rose-700"
-                    }`}
-                  >
-                    {cand.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                        cand.status === "Available"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : cand.status === "Partially Allocated"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-rose-100 text-rose-700"
+                      }`}
+                    >
+                      {cand.status}
+                    </span>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`${API_BASE}/api/assign-squad`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              project_id: selectedProjectId,
+                              employee_ids: [cand.employee_id],
+                              hours_per_member: 12,
+                            }),
+                          });
+                          if (res.ok) {
+                            setAssignedSuccessMsg(`✓ Specialist "${cand.name}" allocated 12h to project in SQLite!`);
+                            fetchTeam(selectedProjectId, teamSize);
+                            setTimeout(() => setAssignedSuccessMsg(null), 4000);
+                          }
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                      className="clay-btn-secondary px-2.5 py-1 text-[10px] font-bold text-scarlet hover:bg-scarlet hover:text-white transition-all shadow-clay-pill"
+                    >
+                      + Assign
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
