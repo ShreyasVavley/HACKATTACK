@@ -180,27 +180,44 @@ export default function SimulationPage() {
             </div>
           </div>
 
-          {/* Added Weekly Commitment Slider */}
+          {/* Added Weekly Commitment Slider with Live Delta Feedback */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-charcoal uppercase tracking-wider">
                 2. Simulated Weekly Demand per Specialist
               </label>
-              <span className="text-xs font-black text-scarlet px-2 py-0.5 rounded-full bg-scarlet/10">
-                +{addedHours} Hours / Week
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-scarlet px-2 py-0.5 rounded-md bg-scarlet/10 border border-scarlet/20">
+                  +{addedHours}h / wk per dev
+                </span>
+              </div>
             </div>
-            <div className="clay-inset p-3 flex items-center gap-3">
-              <input
-                type="range"
-                min={5}
-                max={30}
-                step={1}
-                value={addedHours}
-                onChange={(e) => setAddedHours(Number(e.target.value))}
-                className="w-full accent-scarlet cursor-pointer"
-              />
-              <span className="text-xs font-bold text-charcoal-muted">30h Max</span>
+            <div className="clay-inset p-3 space-y-2">
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min={5}
+                  max={30}
+                  step={1}
+                  value={addedHours}
+                  onChange={(e) => setAddedHours(Number(e.target.value))}
+                  className="w-full accent-scarlet cursor-pointer"
+                />
+                <span className="text-xs font-bold text-charcoal-muted shrink-0">30h Max</span>
+              </div>
+
+              {/* Real-time Delta Feedback on Sliders */}
+              <div className="pt-2 border-t border-charcoal/10 flex flex-wrap items-center justify-between text-[11px] font-bold">
+                <span className="text-charcoal-muted">Real-Time Scenario Delta:</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-charcoal flex items-center gap-1">
+                    <span className="text-scarlet font-black">+{addedHours * selectedCandidateIds.length}h</span> total capacity load
+                  </span>
+                  <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    +${(addedHours * selectedCandidateIds.length * 65).toLocaleString()} / wk est. cost
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -455,7 +455,7 @@ export default function TeamFormationPage() {
                 Blended skill depth, capacity & experience
               </p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-scarlet/10 flex items-center justify-center text-scarlet shadow-clay-pill">
+            <div className="w-12 h-12 rounded-xl bg-scarlet/10 flex items-center justify-center text-scarlet shadow-xs">
               <TrendingUp className="w-6 h-6" />
             </div>
           </motion.div>

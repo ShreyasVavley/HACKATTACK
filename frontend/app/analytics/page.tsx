@@ -183,16 +183,16 @@ export default function AnalyticsDirectoryPage() {
                   </div>
                 </div>
 
-                {/* Skills tags */}
+                {/* Skills tags with fixed minimum height for card baseline alignment */}
                 <div className="mt-4 space-y-1.5">
                   <span className="text-[10px] font-bold uppercase text-charcoal-muted block">
                     Verified Competencies:
                   </span>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 min-h-[52px] content-start">
                     {emp.skills.map((s, idx) => (
                       <span
                         key={idx}
-                        className="text-[10px] px-2 py-0.5 rounded-full bg-white text-charcoal font-medium shadow-clay-pill"
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-white text-charcoal font-medium shadow-xs border border-charcoal/5 h-fit"
                       >
                         {s}
                       </span>
@@ -201,10 +201,21 @@ export default function AnalyticsDirectoryPage() {
                 </div>
               </div>
 
-              {/* Contact info footer */}
+              {/* Contact info footer with mailto icon button and tooltip */}
               <div className="pt-3 border-t border-charcoal/10 flex items-center justify-between text-xs text-charcoal-muted">
-                <span className="truncate max-w-[170px]">{emp.email}</span>
-                <span className="font-bold text-charcoal">{emp.experience_years}y Exp</span>
+                <a
+                  href={`mailto:${emp.email}`}
+                  className="flex items-center gap-1.5 hover:text-scarlet transition-colors group/mail text-xs font-semibold"
+                  title={`Email ${emp.name} (${emp.email})`}
+                >
+                  <span className="w-6 h-6 rounded-md bg-ivory-200 group-hover/mail:bg-scarlet/10 flex items-center justify-center transition-colors">
+                    <Mail className="w-3.5 h-3.5 text-charcoal-muted group-hover/mail:text-scarlet" />
+                  </span>
+                  <span className="hidden sm:inline-block max-w-[140px] truncate">{emp.email.split('@')[0]}</span>
+                </a>
+                <span className="font-bold text-charcoal bg-ivory-200 px-2 py-0.5 rounded text-[11px]">
+                  {emp.experience_years}y Exp
+                </span>
               </div>
             </motion.div>
           );

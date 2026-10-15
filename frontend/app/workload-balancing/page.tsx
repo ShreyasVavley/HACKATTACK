@@ -124,7 +124,7 @@ export default function WorkloadBalancingPage() {
       if (res.ok) {
         const data = await res.json();
         setAppliedNotice(
-          `✓ SQLite Shift Updated: Shifted ${item.suggested_hours_to_shift}h from ${item.from_employee_name} to ${item.to_employee_name}! Utilization heatmap updated live.`
+          `✓ Shift executed: Transferred ${item.suggested_hours_to_shift}h from ${item.from_employee_name} to ${item.to_employee_name}.`
         );
         // Instantly refresh live workload stats and employee hours from SQLite
         await fetchWorkloadData();
@@ -133,6 +133,46 @@ export default function WorkloadBalancingPage() {
       }
     } catch (err) {
       console.error("Failed to execute shift in DB:", err);
+    }
+    setTimeout(() => setAppliedNotice(null), 5000);
+  };
+
+  const handleQuickRebalanceStaff = async (overloadedEmp: Employee) => {
+    // Find compatible available/bench talent (<50% utilization)
+    const excessHours = Math.max(4, Math.round(overloadedEmp.current_workload_hours - (overloadedEmp.max_hours * 0.75)));
+    const benchCandidates = employees.filter(
+      (e) => e.id !== overloadedEmp.id && e.utilization_pct < 50
+    );
+
+    // Score bench candidates by skill overlap
+    let target = benchCandidates.find((b) =>
+      b.skills.some((s) => overloadedEmp.skills.includes(s))
+    );
+    if (!target && benchCandidates.length > 0) {
+      target = benchCandidates[0];
+    }
+
+    if (!target) {
+      alert("No available bench talent found to absorb excess workload.");
+      return;
+    }
+
+    const shiftHours = Math.min(excessHours, Math.max(2, 40 - target.current_workload_hours));
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/apply-shift?from_id=${overloadedEmp.id}&to_id=${target.id}&hours=${shiftHours}`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        setAppliedNotice(
+          `✓ Rebalanced! Offloaded ${shiftHours}h from ${overloadedEmp.name} to ${target.name} (${target.role}).`
+        );
+        await fetchWorkloadData();
+        await handleGenerateShifts();
+      }
+    } catch (err) {
+      console.error("Quick rebalance failed:", err);
     }
     setTimeout(() => setAppliedNotice(null), 5000);
   };
@@ -367,7 +407,7 @@ export default function WorkloadBalancingPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs">
+                  <div className="flex items-center gap-2.5 text-xs">
                     <span className="font-bold text-charcoal">
                       {emp.current_workload_hours}h / {emp.max_hours}h weekly
                     </span>
@@ -382,6 +422,16 @@ export default function WorkloadBalancingPage() {
                     >
                       {emp.utilization_pct}% {isBurnout ? "• Burnout Risk" : isBench ? "• Bench" : "• Optimal"}
                     </span>
+                    {isBurnout && (
+                      <button
+                        onClick={() => handleQuickRebalanceStaff(emp)}
+                        className="px-2.5 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] shadow-xs flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap"
+                        title="Automatically offload excess hours to compatible bench talent"
+                      >
+                        <Zap className="w-3 h-3 fill-current" />
+                        <span>Rebalance Hours</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
