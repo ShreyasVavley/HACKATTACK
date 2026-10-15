@@ -138,25 +138,6 @@ export default function TeamFormationPage() {
     handleSwapMember(toReplace.employee_id, candidate);
   };
 
-  useEffect(() => {
-    loadProjects();
-
-    // Live WebSocket Sync Listener
-    const handleLiveSync = () => {
-      if (selectedProjectId) {
-        fetchTeam(selectedProjectId, teamSize);
-      }
-    };
-    if (typeof window !== "undefined") {
-      window.addEventListener("workforce_iq_live_sync", handleLiveSync);
-    }
-    return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("workforce_iq_live_sync", handleLiveSync);
-      }
-    };
-  }, [selectedProjectId, teamSize]);
-
   const loadProjects = async (preferredProjId?: number) => {
     try {
       const res = await fetch(`${API_BASE}/api/projects`);
@@ -173,6 +154,28 @@ export default function TeamFormationPage() {
       console.error("Error loading projects:", err);
     }
   };
+
+  // Initial mount: load projects once
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  // Live WebSocket Sync Listener
+  useEffect(() => {
+    const handleLiveSync = () => {
+      if (selectedProjectId) {
+        fetchTeam(selectedProjectId, teamSize);
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("workforce_iq_live_sync", handleLiveSync);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("workforce_iq_live_sync", handleLiveSync);
+      }
+    };
+  }, [selectedProjectId, teamSize]);
 
   const fetchTeam = async (projId: number, size: number) => {
     setLoading(true);
