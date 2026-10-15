@@ -20,7 +20,12 @@ import {
   HelpCircle,
   Info,
   X,
-  Lock
+  Lock,
+  ArrowLeftRight,
+  UserMinus,
+  Filter,
+  Zap,
+  Clock
 } from "lucide-react";
 import CreateEntityModal from "../../components/CreateEntityModal";
 
@@ -78,6 +83,60 @@ export default function TeamFormationPage() {
   const [assignedSuccessMsg, setAssignedSuccessMsg] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [methodologyOpen, setMethodologyOpen] = useState<boolean>(false);
+  const [hideOverallocated, setHideOverallocated] = useState<boolean>(false);
+  const [hoveredCandidateId, setHoveredCandidateId] = useState<number | null>(null);
+
+  // Helper: swap an existing squad member with an external candidate
+  const handleSwapMember = (currentMemberId: number, targetCandidate: CandidateMatch) => {
+    if (!recommendation) return;
+    const updatedSquad = recommendation.selected_team.map((m) =>
+      m.employee_id === currentMemberId ? targetCandidate : m
+    );
+
+    // Recompute competencies and readiness
+    const combined = new Set<string>();
+    updatedSquad.forEach((m) => m.all_skills.forEach((s) => combined.add(s.toLowerCase())));
+    const missing = (currentProject?.required_skills || []).filter(
+      (req) => !Array.from(combined).some((s) => s.includes(req.toLowerCase()) || req.toLowerCase().includes(s))
+    );
+    const avgScore = updatedSquad.reduce((acc, m) => acc + m.match_score, 0) / Math.max(updatedSquad.length, 1);
+    const coverageRatio = currentProject?.required_skills?.length
+      ? (currentProject.required_skills.length - missing.length) / currentProject.required_skills.length
+      : 1;
+    const readiness = Math.round(((0.5 * avgScore) + (0.5 * (coverageRatio * 100))) * 10) / 10;
+
+    setRecommendation({
+      ...recommendation,
+      selected_team: updatedSquad,
+      missing_team_competencies: missing,
+      overall_team_readiness: readiness
+    });
+
+    setAssignedSuccessMsg(`✓ Swapped specialist! Combined team now updated.`);
+    setTimeout(() => setAssignedSuccessMsg(null), 3000);
+  };
+
+  // Helper: Auto-resolve gap for a specific skill (e.g. React) by swapping lowest match with best cover
+  const handleAutoResolveGap = (gapSkill: string) => {
+    if (!recommendation) return;
+    const gapLower = gapSkill.toLowerCase();
+    // Find candidate not in selected team who covers this skill and has highest match
+    const currentIds = new Set(recommendation.selected_team.map((m) => m.employee_id));
+    const candidate = recommendation.all_ranked_candidates
+      .filter((c) => !currentIds.has(c.employee_id))
+      .find((c) => c.all_skills.some((s) => s.toLowerCase().includes(gapLower)));
+
+    if (!candidate) {
+      alert(`No available specialist found with proficiency in ${gapSkill}.`);
+      return;
+    }
+
+    // Replace candidate in squad with lowest match or lowest contribution
+    const sortedSquad = [...recommendation.selected_team].sort((a, b) => a.match_score - b.match_score);
+    const toReplace = sortedSquad[0];
+
+    handleSwapMember(toReplace.employee_id, candidate);
+  };
 
   useEffect(() => {
     loadProjects();
@@ -401,26 +460,35 @@ export default function TeamFormationPage() {
             </div>
           </motion.div>
 
+          {/* Card 2: Average Experience & Bandwidth (Replacing redundant Selected Squad count) */}
           <motion.div
             whileHover={{ y: -3 }}
             className="clay-card p-6 flex items-center justify-between border-b-4 border-b-charcoal"
           >
             <div>
               <span className="text-xs uppercase font-bold text-charcoal-muted tracking-wider">
-                Selected Squad
+                Average Experience & Bandwidth
               </span>
-              <div className="text-3xl font-black text-charcoal mt-1">
-                {recommendation.selected_team.length} Specialists
+              <div className="text-2xl font-black text-charcoal mt-1 flex items-baseline gap-2">
+                <span>
+                  {recommendation.selected_team.length > 0
+                    ? (recommendation.selected_team.reduce((a, b) => a + b.experience_years, 0) / recommendation.selected_team.length).toFixed(1)
+                    : "0.0"}y Exp
+                </span>
+                <span className="text-xs font-bold text-charcoal/60">
+                  • {recommendation.selected_team.reduce((a, b) => a + b.available_hours, 0)}h Free
+                </span>
               </div>
               <p className="text-[11px] font-medium text-charcoal-muted mt-1">
-                Ranked optimal candidate mix
+                Seniority baseline & collective weekly availability
               </p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-charcoal/5 flex items-center justify-center text-charcoal shadow-clay-pill">
-              <Users className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-xl bg-charcoal/5 flex items-center justify-center text-charcoal shadow-clay-pill">
+              <Clock className="w-6 h-6" />
             </div>
           </motion.div>
 
+          {/* Card 3: Skill Gap Warnings + Auto-Resolve Action */}
           <motion.div
             whileHover={{ y: -3 }}
             className="clay-card p-6 flex items-center justify-between border-b-4 border-b-rose-500"
@@ -429,22 +497,33 @@ export default function TeamFormationPage() {
               <span className="text-xs uppercase font-bold text-charcoal-muted tracking-wider">
                 Skill Gap Warnings
               </span>
-              <div className="text-xl font-black mt-1">
+              <div className="text-base font-black mt-1 flex flex-wrap items-center gap-2">
                 {recommendation.missing_team_competencies.length === 0 ? (
                   <span className="text-emerald-600 flex items-center gap-1 text-sm font-bold">
                     <CheckCircle2 className="w-4 h-4" /> 100% Core Skill Match
                   </span>
                 ) : (
-                  <span className="text-rose-600 text-base font-extrabold">
-                    {recommendation.missing_team_competencies.join(", ")}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-rose-600 font-extrabold text-sm">
+                      Missing: {recommendation.missing_team_competencies.join(", ")}
+                    </span>
+                    {/* Auto-Resolve Button */}
+                    <button
+                      onClick={() => handleAutoResolveGap(recommendation.missing_team_competencies[0])}
+                      className="px-2.5 py-1 text-[11px] font-bold rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                      title="Auto-swap squad member to achieve 100% skill coverage"
+                    >
+                      <Zap className="w-3 h-3 text-amber-300" />
+                      <span>Auto-swap to cover {recommendation.missing_team_competencies[0]}</span>
+                    </button>
+                  </div>
                 )}
               </div>
               <p className="text-[11px] font-medium text-charcoal-muted mt-1">
-                Missing competencies across squad
+                Competencies required by project scope
               </p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 shadow-clay-pill">
+            <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 shadow-clay-pill">
               <AlertTriangle className="w-6 h-6" />
             </div>
           </motion.div>
@@ -505,31 +584,66 @@ export default function TeamFormationPage() {
                     </div>
                   )}
 
-                  {/* Sub-Score Breakdown Chips */}
-                  <div className="mt-4 grid grid-cols-3 gap-2 clay-inset p-3 text-center text-xs">
-                    <div>
-                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Skill (50%)</span>
-                      <span className="font-black text-scarlet">{cand.skill_match_score}%</span>
+                  {/* Sub-Score Breakdown with Interactive Contribution Micro-Bars */}
+                  <div
+                    onMouseEnter={() => setHoveredCandidateId(cand.employee_id)}
+                    onMouseLeave={() => setHoveredCandidateId(null)}
+                    className="mt-4 p-3 rounded-lg bg-ivory border border-charcoal/10 space-y-2 cursor-help"
+                    title="Hover to view exact points contribution out of 100"
+                  >
+                    <div className="flex items-center justify-between text-[11px] font-bold text-charcoal-muted">
+                      <span>Score Contribution Breakdown</span>
+                      <span className="text-scarlet font-mono font-black">{cand.match_score} / 100 pts</span>
                     </div>
-                    <div>
-                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Exp (25%)</span>
-                      <span className="font-black text-charcoal">{cand.experience_years}y</span>
+
+                    {/* Stacked Micro-Bars */}
+                    <div className="w-full h-2 rounded-full bg-charcoal/10 flex overflow-hidden">
+                      <div
+                        className="bg-scarlet h-full transition-all duration-300"
+                        style={{ width: `${(cand.skill_match_score * 0.5)}%` }}
+                        title={`Skill Match: ${(cand.skill_match_score * 0.5).toFixed(1)} / 50 pts`}
+                      ></div>
+                      <div
+                        className="bg-charcoal h-full transition-all duration-300"
+                        style={{ width: `${(cand.experience_score * 0.25)}%` }}
+                        title={`Experience: ${(cand.experience_score * 0.25).toFixed(1)} / 25 pts`}
+                      ></div>
+                      <div
+                        className="bg-emerald-500 h-full transition-all duration-300"
+                        style={{ width: `${(cand.availability_score * 0.25)}%` }}
+                        title={`Availability: ${(cand.availability_score * 0.25).toFixed(1)} / 25 pts`}
+                      ></div>
                     </div>
-                    <div>
-                      <span className="text-[10px] text-charcoal-muted font-bold block uppercase">Load (25%)</span>
-                      <span
-                        className={`font-black ${
-                          cand.utilization_pct > 85
-                            ? "text-rose-600"
-                            : cand.utilization_pct < 40
-                            ? "text-emerald-600"
-                            : "text-scarlet"
-                        }`}
-                      >
-                        {cand.utilization_pct}%
-                      </span>
+
+                    {/* Explanatory Legend / Micro Stats */}
+                    <div className="grid grid-cols-3 gap-1 pt-1 text-[10px]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-scarlet shrink-0"></span>
+                        <span className="text-charcoal-muted truncate">
+                          Skill: <strong className="text-charcoal">{(cand.skill_match_score * 0.5).toFixed(1)}p</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-charcoal shrink-0"></span>
+                        <span className="text-charcoal-muted truncate">
+                          Exp: <strong className="text-charcoal">{(cand.experience_score * 0.25).toFixed(1)}p</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                        <span className="text-charcoal-muted truncate">
+                          Avail: <strong className="text-charcoal">{(cand.availability_score * 0.25).toFixed(1)}p</strong>
+                        </span>
+                      </div>
                     </div>
+
+                    {hoveredCandidateId === cand.employee_id && (
+                      <div className="text-[10px] text-charcoal/70 pt-1 border-t border-charcoal/5 leading-snug">
+                        {cand.skill_match_score}% of required skills matched • {cand.experience_years}y tenure • {cand.utilization_pct}% capacity
+                      </div>
+                    )}
                   </div>
+
 
                   {/* Skill Badges */}
                   <div className="mt-4 space-y-2">
@@ -584,29 +698,28 @@ export default function TeamFormationPage() {
                       {cand.status}
                     </span>
                     <button
-                      onClick={async () => {
-                        try {
-                          const res = await fetch(`${API_BASE}/api/assign-squad`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              project_id: selectedProjectId,
-                              employee_ids: [cand.employee_id],
-                              hours_per_member: 12,
-                            }),
-                          });
-                          if (res.ok) {
-                            setAssignedSuccessMsg(`✓ Specialist "${cand.name}" allocated 12h to project in SQLite!`);
-                            fetchTeam(selectedProjectId, teamSize);
-                            setTimeout(() => setAssignedSuccessMsg(null), 4000);
-                          }
-                        } catch (err) {
-                          console.error(err);
+                      onClick={() => {
+                        if (!recommendation) return;
+                        if (recommendation.selected_team.length <= 1) {
+                          alert("A squad must contain at least 1 specialist.");
+                          return;
+                        }
+                        const currentIds = new Set(recommendation.selected_team.map((m) => m.employee_id));
+                        const replacement = recommendation.all_ranked_candidates.find(
+                          (c) => !currentIds.has(c.employee_id)
+                        );
+                        if (replacement) {
+                          handleSwapMember(cand.employee_id, replacement);
+                        } else {
+                          const updated = recommendation.selected_team.filter((m) => m.employee_id !== cand.employee_id);
+                          setRecommendation({ ...recommendation, selected_team: updated });
                         }
                       }}
-                      className="clay-btn-secondary px-2.5 py-1 text-[10px] font-bold text-scarlet hover:bg-scarlet hover:text-white transition-all shadow-clay-pill"
+                      className="px-2.5 py-1 text-[10px] font-bold text-charcoal/70 bg-charcoal/5 hover:bg-rose-50 hover:text-rose-600 rounded-md transition-all flex items-center gap-1 border border-charcoal/10 cursor-pointer"
+                      title="Remove candidate and swap with next best specialist"
                     >
-                      + Assign
+                      <UserMinus className="w-3 h-3" />
+                      <span>Remove</span>
                     </button>
                   </div>
                 </div>
@@ -618,12 +731,28 @@ export default function TeamFormationPage() {
 
       {/* Complete Pool Matrix */}
       <div className="clay-card p-6 md:p-8 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-black text-charcoal flex items-center gap-2">
-            <Layers className="w-4 h-4 text-scarlet" />
-            Full Talent Matrix Ranking
-          </h3>
-          <span className="text-xs font-bold text-charcoal-muted">All active staff ranked against project</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-black text-charcoal flex items-center gap-2">
+              <Layers className="w-4 h-4 text-scarlet" />
+              Full Talent Matrix Ranking
+            </h3>
+            <span className="text-xs font-bold text-charcoal-muted">All active staff evaluated against project criteria</span>
+          </div>
+
+          {/* Filter out Busy Staff Toggle */}
+          <div className="flex items-center gap-2 bg-ivory p-2 px-3 rounded-lg border border-charcoal/10">
+            <Filter className="w-3.5 h-3.5 text-charcoal-muted" />
+            <label className="text-xs font-bold text-charcoal flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hideOverallocated}
+                onChange={(e) => setHideOverallocated(e.target.checked)}
+                className="rounded text-scarlet focus:ring-scarlet/30 cursor-pointer"
+              />
+              <span>Hide Overallocated (&gt;80%)</span>
+            </label>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -637,63 +766,108 @@ export default function TeamFormationPage() {
                 <th className="py-3 px-4">Workload</th>
                 <th className="py-3 px-4">Matching Competencies</th>
                 <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-right">Direct Swap Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-charcoal/5 font-medium text-charcoal">
-              {recommendation?.all_ranked_candidates.map((cand) => (
-                <tr key={cand.employee_id} className="hover:bg-ivory-100/60 transition-colors">
-                  <td className="py-3 px-4 font-bold text-charcoal">{cand.name}</td>
-                  <td className="py-3 px-4 text-charcoal-muted">{cand.role}</td>
-                  <td className="py-3 px-4">{cand.experience_years} Years</td>
-                  <td className="py-3 px-4 font-black text-scarlet">{cand.match_score}%</td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-2 rounded-full bg-charcoal/10 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            cand.utilization_pct > 85
-                              ? "bg-rose-500"
-                              : cand.utilization_pct < 40
-                              ? "bg-emerald-500"
-                              : "bg-scarlet"
-                          }`}
-                          style={{ width: `${Math.min(cand.utilization_pct, 100)}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-[11px] font-bold">{cand.utilization_pct}%</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex flex-wrap gap-1">
-                      {cand.matched_skills.map((s, idx) => (
-                        <span
-                          key={idx}
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-white text-charcoal font-semibold shadow-clay-pill"
-                        >
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        cand.status === "Available"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : cand.status === "Partially Allocated"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-rose-100 text-rose-700"
+              {recommendation?.all_ranked_candidates
+                .filter((cand) => !hideOverallocated || cand.utilization_pct <= 80)
+                .map((cand) => {
+                  const isInSquad = recommendation.selected_team.some(
+                    (m) => m.employee_id === cand.employee_id
+                  );
+
+                  return (
+                    <tr
+                      key={cand.employee_id}
+                      className={`hover:bg-ivory-100/60 transition-colors ${
+                        isInSquad ? "bg-scarlet/5 font-semibold" : ""
                       }`}
                     >
-                      {cand.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                      <td className="py-3 px-4 font-bold text-charcoal">
+                        <div className="flex items-center gap-1.5">
+                          {cand.name}
+                          {isInSquad && (
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-scarlet text-white">
+                              In Squad
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-charcoal-muted">{cand.role}</td>
+                      <td className="py-3 px-4">{cand.experience_years} Years</td>
+                      <td className="py-3 px-4 font-black text-scarlet">{cand.match_score}%</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-2 rounded-full bg-charcoal/10 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                cand.utilization_pct > 85
+                                  ? "bg-rose-500"
+                                  : cand.utilization_pct < 40
+                                  ? "bg-emerald-500"
+                                  : "bg-scarlet"
+                              }`}
+                              style={{ width: `${Math.min(cand.utilization_pct, 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-[11px] font-bold">{cand.utilization_pct}%</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {cand.matched_skills.map((s, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[10px] px-2 py-0.5 rounded-full bg-white text-charcoal font-semibold shadow-clay-pill"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            cand.status === "Available"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : cand.status === "Partially Allocated"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {cand.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {isInSquad ? (
+                          <span className="text-[11px] text-charcoal-muted font-bold italic">
+                            Active in Squad
+                          </span>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1">
+                            {recommendation.selected_team.map((squadMember, sIdx) => (
+                              <button
+                                key={squadMember.employee_id}
+                                onClick={() => handleSwapMember(squadMember.employee_id, cand)}
+                                className="px-2 py-1 text-[10px] font-bold rounded bg-white hover:bg-scarlet hover:text-white border border-charcoal/10 transition-colors shadow-xs flex items-center gap-1 cursor-pointer"
+                                title={`Swap with #${sIdx + 1} (${squadMember.name})`}
+                              >
+                                <ArrowLeftRight className="w-2.5 h-2.5" />
+                                <span>Swap #{sIdx + 1}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
       </div>
+
 
       {/* Scoring Methodology Modal */}
       <AnimatePresence>
