@@ -2,14 +2,17 @@
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 14](https://img.shields.io/badge/Frontend-Next.js%2014-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
+[![Vercel Production](https://img.shields.io/badge/Deployed-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://frontend-three-ecru-54.vercel.app)
 [![Tailwind CSS](https://img.shields.io/badge/Styling-Enterprise%20Tailwind-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20SQLAlchemy-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Deployment-Docker%20Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
 
-**Workforce Intelligence Platform** (Codename: **WorkforceIQ**) is an enterprise-grade workforce planning, resource allocation, and talent optimization dashboard designed for Project Managers, Operations Directors, and HR Allocation Leads.
+**Workforce Intelligence Platform** (Codename: **WorkforceIQ**) is an enterprise-grade resource planning, staffing, and workforce optimization platform designed for Project Managers, Operations Directors, and Resource Allocation Leads.
+
+🌐 **Live Vercel Frontend**: [https://frontend-three-ecru-54.vercel.app](https://frontend-three-ecru-54.vercel.app)
 
 The system is purposefully built around the three core pillars of modern workforce operations:
-1. **Smart Team Formation (Scenario A)** — Multi-factor algorithmic matching balancing candidate skill overlap, experience tenure, and real-time availability with squad-level combinatorial set coverage.
+1. **Smart Team Formation (Scenario A)** — Multi-factor algorithmic matching balancing candidate skill overlap, experience tenure, and real-time availability with whole-squad combinatorial set coverage.
 2. **Workload Balancing (Scenario B)** — Capacity monitoring, burnout threshold detection ($>85\%$), bench talent tracking ($<40\%$), and automated one-click task reallocation shifts.
 3. **Skill Gap Analysis & Training** — Automated project competency gap assessment and targeted training module pathways.
 
@@ -18,7 +21,11 @@ The system is purposefully built around the three core pillars of modern workfor
 ## 🎨 Enterprise UI & Vertical Left Sidebar Architecture
 
 The platform features an **Enterprise Vertical Left Sidebar** designed specifically for high-density HR and operations management:
-- **Persistent Left Navigation**: Single-click access between Overview Hub, Smart Team Formation, Workload Balancing, Skill Gap Analysis, and Talent Analytics.
+- **Persistent Left Navigation**: Single-click access strictly aligned with the core problem statement:
+  - **Overview Hub** (`/`)
+  - **Smart Team Formation** (`/team-formation` — Scenario A)
+  - **Workload Balancing** (`/workload-balancing` — Scenario B)
+  - **Skill Gap & Training** (`/skill-gap`)
 - **Integrated Actions & Live Engine Sync**: A dedicated `[Create New Record]` trigger and real-time WebSocket connection badge are embedded directly into the sidebar.
 - **Disciplined Enterprise Palette**:
   - **Ivory (`#FAF8F5`)**: High-legibility background surfaces and structured cards.
@@ -162,6 +169,22 @@ Open **`http://localhost:3000`** in your browser.
 
 ---
 
+### ☁️ Production Deployment on Vercel
+ 
+The Next.js 14 frontend is pre-configured for instant zero-configuration deployment to [Vercel](https://vercel.com):
+ 
+```bash
+cd frontend
+vercel --prod
+```
+ 
+#### Environment Configuration on Vercel:
+When deploying your production backend (e.g. Render, Railway, Fly.io, or AWS EC2), set the following environment variables in your Vercel Project Settings:
+- `NEXT_PUBLIC_API_URL`: Your live backend API URL (e.g. `https://api.workforce-iq.internal` or `https://your-backend.railway.app`)
+- `NEXT_PUBLIC_WS_URL`: Your live WebSocket stream (e.g. `wss://api.workforce-iq.internal/ws` or `wss://your-backend.railway.app/ws`)
+ 
+---
+ 
 ### 🐳 Running with Docker Compose
 
 Deploy the entire stack with a single command:
