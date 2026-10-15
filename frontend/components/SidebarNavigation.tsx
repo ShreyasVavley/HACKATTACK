@@ -21,7 +21,7 @@ export default function SidebarNavigation() {
   const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Exact core problem statement features + Analytics
+  // Strictly the 3 core problem scenarios + Overview Hub
   const primaryNavItems = [
     {
       name: "Overview Hub",
@@ -50,17 +50,11 @@ export default function SidebarNavigation() {
       badge: "Upskilling",
       description: "Missing skills & training pathways",
     },
-    {
-      name: "Talent Analytics",
-      href: "/analytics",
-      icon: BarChart3,
-      description: "Staff matrix & utilization metrics",
-    },
   ];
 
   return (
     <>
-      <aside className="w-64 bg-white border-r border-charcoal/10 flex flex-col justify-between h-screen sticky top-0 shrink-0 z-30 select-none shadow-xs">
+      <aside className="w-68 bg-white border-r border-charcoal/10 flex flex-col justify-between h-screen sticky top-0 shrink-0 z-30 select-none shadow-xs">
         {/* Top Section: Logo & Brand */}
         <div className="flex flex-col">
           <div className="p-5 border-b border-charcoal/10 flex items-center justify-between">
@@ -123,9 +117,7 @@ export default function SidebarNavigation() {
                         isActive ? "text-scarlet-light" : "text-charcoal-muted group-hover:text-charcoal"
                       }`}
                     />
-                    <div className="truncate">
-                      <div className="truncate">{item.name}</div>
-                    </div>
+                    <span className="whitespace-nowrap">{item.name}</span>
                   </div>
 
                   {item.badge && (

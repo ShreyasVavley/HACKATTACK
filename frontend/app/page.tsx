@@ -112,14 +112,15 @@ export default function OverviewHubPage() {
         className="clay-card p-8 md:p-10 relative overflow-hidden bg-gradient-to-br from-white via-ivory to-ivory-200 border border-charcoal/10"
       >
         <div className="max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-scarlet/10 text-scarlet font-bold text-xs border border-scarlet/20">
-            <Sparkles className="w-3.5 h-3.5 text-scarlet" />
-            <span>Criteria Met: 4/4</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-charcoal leading-tight">
+              WorkforceIQ Platform
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-scarlet/10 text-scarlet font-bold text-xs border border-scarlet/20">
+              <Sparkles className="w-3.5 h-3.5 text-scarlet" />
+              Criteria Met: 4/4
+            </span>
           </div>
-
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-charcoal leading-tight">
-            WorkforceIQ Platform
-          </h1>
 
           <p className="text-sm md:text-base font-medium text-charcoal-muted leading-relaxed">
             Eliminate project bottlenecks by matching high-fit engineers, balancing weekly team workloads, and prescribing targeted skill-gap learning journeys.
@@ -249,13 +250,13 @@ export default function OverviewHubPage() {
             <div className="w-10 h-10 rounded-lg bg-scarlet/10 flex items-center justify-center text-scarlet mb-3">
               <Users className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-scarlet/10 text-scarlet">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-scarlet block mb-1">
               Scenario A
             </span>
-            <h3 className="text-lg font-black text-charcoal mt-2">
+            <h3 className="text-lg font-black text-charcoal">
               Smart Team Formation
             </h3>
-            <p className="text-xs text-charcoal-muted leading-relaxed font-medium">
+            <p className="text-xs text-charcoal-muted leading-relaxed font-medium mt-1">
               Autonomous matching algorithm blending cosine skill similarity, experience tenure, and real-time weekly availability.
             </p>
           </div>
@@ -277,13 +278,13 @@ export default function OverviewHubPage() {
             <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 mb-3">
               <Flame className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-rose-100 text-rose-600">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 block mb-1">
               Scenario B
             </span>
-            <h3 className="text-lg font-black text-charcoal mt-2">
+            <h3 className="text-lg font-black text-charcoal">
               Workload Balancing & Heatmaps
             </h3>
-            <p className="text-xs text-charcoal-muted leading-relaxed font-medium">
+            <p className="text-xs text-charcoal-muted leading-relaxed font-medium mt-1">
               Detect burnout spikes, visualize individual weekly capacity bars, and generate one-click task reallocation shifts.
             </p>
           </div>
@@ -305,13 +306,13 @@ export default function OverviewHubPage() {
             <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3">
               <GraduationCap className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
-              Upskilling Advisor
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block mb-1">
+              Skill Gap & Training
             </span>
-            <h3 className="text-lg font-black text-charcoal mt-2">
+            <h3 className="text-lg font-black text-charcoal">
               Skill Gap & Training
             </h3>
-            <p className="text-xs text-charcoal-muted leading-relaxed font-medium">
+            <p className="text-xs text-charcoal-muted leading-relaxed font-medium mt-1">
               Analyze organizational missing skills for upcoming projects and enroll staff into certified corporate bootcamps.
             </p>
           </div>
