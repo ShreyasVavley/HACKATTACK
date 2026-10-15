@@ -557,7 +557,7 @@ export default function TeamFormationPage() {
                   {/* Top Rank Badge & Fit Label */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-scarlet to-scarlet-dark text-white font-black text-sm flex items-center justify-center shadow-clay-btn">
+                      <div className="w-9 h-9 rounded-lg bg-scarlet text-white font-black text-sm flex items-center justify-center shadow-xs">
                         #{idx + 1}
                       </div>
                       <div>
@@ -570,7 +570,7 @@ export default function TeamFormationPage() {
                       <div className="text-2xl font-black text-scarlet">
                         {cand.match_score}%
                       </div>
-                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-scarlet/10 text-scarlet">
+                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-scarlet/10 text-scarlet">
                         {cand.fit_assessment}
                       </span>
                     </div>
@@ -578,11 +578,12 @@ export default function TeamFormationPage() {
 
                   {/* Warning Notice if Overloaded */}
                   {cand.warning && (
-                    <div className="mt-3.5 p-2 px-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold flex items-center gap-2">
+                    <div className="mt-3.5 p-2 px-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold flex items-center gap-2">
                       <ShieldAlert className="w-4 h-4 flex-shrink-0" />
                       <span>{cand.warning}</span>
                     </div>
                   )}
+
 
                   {/* Sub-Score Breakdown with Interactive Contribution Micro-Bars */}
                   <div

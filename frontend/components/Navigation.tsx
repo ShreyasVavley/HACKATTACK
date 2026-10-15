@@ -90,15 +90,18 @@ export default function Navigation() {
               })}
             </nav>
 
-            <RealtimeNotificationCenter />
+            <div className="flex items-center gap-2">
+              <RealtimeNotificationCenter />
 
-            <button
-              onClick={() => setModalOpen(true)}
-              className="clay-btn-primary px-3.5 py-1.5 text-xs font-bold flex items-center gap-1.5 shadow-clay-btn hover:scale-105 transition-transform"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>Add Entity</span>
-            </button>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="px-3 py-1.5 rounded-lg bg-charcoal hover:bg-charcoal-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer"
+                title="Create custom specialist or project"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>New Record</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
