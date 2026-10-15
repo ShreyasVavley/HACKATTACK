@@ -15,6 +15,7 @@ import {
   Plus
 } from "lucide-react";
 import CreateEntityModal from "./CreateEntityModal";
+import RealtimeNotificationCenter from "./RealtimeNotificationCenter";
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -88,6 +89,8 @@ export default function Navigation() {
                 );
               })}
             </nav>
+
+            <RealtimeNotificationCenter />
 
             <button
               onClick={() => setModalOpen(true)}

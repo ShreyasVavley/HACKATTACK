@@ -72,6 +72,19 @@ export default function WorkloadBalancingPage() {
 
   useEffect(() => {
     fetchWorkloadData();
+
+    // Live WebSocket Sync Listener
+    const handleLiveSync = () => {
+      fetchWorkloadData();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("workforce_iq_live_sync", handleLiveSync);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("workforce_iq_live_sync", handleLiveSync);
+      }
+    };
   }, []);
 
   const fetchWorkloadData = async () => {

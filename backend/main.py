@@ -7,7 +7,7 @@ import json
 from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, Column, Integer, String, Float
@@ -330,6 +330,51 @@ app.add_middleware(
 )
 
 
+# ---------------------------------------------------------
+# Real-Time WebSocket Connection Manager
+# ---------------------------------------------------------
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(message)
+            except Exception:
+                self.disconnect(connection)
+
+manager = ConnectionManager()
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        # Send initial confirmation
+        await websocket.send_json({
+            "type": "CONNECTED",
+            "message": "Connected to WorkforceIQ Real-Time Live Stream Engine"
+        })
+        while True:
+            data = await websocket.receive_text()
+            # Echo back ping / pong if requested
+            if data == "ping":
+                await websocket.send_json({"type": "PONG"})
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception:
+        manager.disconnect(websocket)
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -594,7 +639,7 @@ def get_employees(db: Session = Depends(get_db)):
 
 
 @app.post("/api/employees", response_model=EmployeeOut)
-def create_employee(emp_in: EmployeeCreate, db: Session = Depends(get_db)):
+async def create_employee(emp_in: EmployeeCreate, db: Session = Depends(get_db)):
     """Interactive CRUD: Add a brand-new employee to SQLite DB."""
     # Check email duplicate
     existing = db.query(EmployeeModel).filter(EmployeeModel.email == emp_in.email).first()
@@ -626,6 +671,20 @@ def create_employee(emp_in: EmployeeCreate, db: Session = Depends(get_db)):
     db.add(new_emp)
     db.commit()
     db.refresh(new_emp)
+
+    # Real-time WebSocket broadcast
+    await manager.broadcast({
+        "type": "EMPLOYEE_CREATED",
+        "employee": {
+            "id": new_emp.id,
+            "name": new_emp.name,
+            "role": new_emp.role,
+            "skills": parse_skills(new_emp.skills),
+            "utilization_pct": round(util, 1),
+            "status": new_emp.status
+        },
+        "message": f"New specialist {new_emp.name} ({new_emp.role}) joined the talent pool."
+    })
 
     return EmployeeOut(
         id=new_emp.id,
@@ -659,7 +718,7 @@ def get_projects(db: Session = Depends(get_db)):
 
 
 @app.post("/api/projects", response_model=ProjectOut)
-def create_project(proj_in: ProjectCreate, db: Session = Depends(get_db)):
+async def create_project(proj_in: ProjectCreate, db: Session = Depends(get_db)):
     """Interactive CRUD: Add a custom project to SQLite DB and enable real-time matching."""
     new_proj = ProjectModel(
         name=proj_in.name,
@@ -672,6 +731,18 @@ def create_project(proj_in: ProjectCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_proj)
 
+    # Real-time WebSocket broadcast
+    await manager.broadcast({
+        "type": "PROJECT_CREATED",
+        "project": {
+            "id": new_proj.id,
+            "name": new_proj.name,
+            "required_skills": parse_skills(new_proj.required_skills),
+            "status": new_proj.status
+        },
+        "message": f"Project '{new_proj.name}' initialized in planning pipeline."
+    })
+
     return ProjectOut(
         id=new_proj.id,
         name=new_proj.name,
@@ -680,6 +751,7 @@ def create_project(proj_in: ProjectCreate, db: Session = Depends(get_db)):
         required_experience=new_proj.required_experience,
         status=new_proj.status
     )
+
 
 
 @app.post("/api/match-team", response_model=TeamRecommendationResponse)
@@ -805,7 +877,7 @@ def match_team(request: MatchRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/api/assign-squad", response_model=AssignSquadResponse)
-def assign_squad(req: AssignSquadRequest, db: Session = Depends(get_db)):
+async def assign_squad(req: AssignSquadRequest, db: Session = Depends(get_db)):
     """
     Dynamic DB State Changes:
     Assigns selected squad members to a project, updating their current_workload_hours in SQLite.
@@ -854,6 +926,26 @@ def assign_squad(req: AssignSquadRequest, db: Session = Depends(get_db)):
     project.status = "Active"
     db.commit()
 
+    # Real-time WebSocket broadcast
+    await manager.broadcast({
+        "type": "SQUAD_DEPLOYED",
+        "project_id": project.id,
+        "project_name": project.name,
+        "assigned_count": len(updated_employees),
+        "updated_employees": [
+            {
+                "id": e.id,
+                "name": e.name,
+                "role": e.role,
+                "current_workload_hours": e.current_workload_hours,
+                "utilization_pct": e.utilization_pct,
+                "status": e.status
+            }
+            for e in updated_employees
+        ],
+        "message": f"Deployed {len(updated_employees)} specialists to '{project.name}'. Workloads updated live."
+    })
+
     return AssignSquadResponse(
         success=True,
         project_id=project.id,
@@ -862,6 +954,7 @@ def assign_squad(req: AssignSquadRequest, db: Session = Depends(get_db)):
         updated_employees=updated_employees,
         message=f"Successfully deployed {len(updated_employees)} specialists to '{project.name}'. Workloads updated live in SQLite database!"
     )
+
 
 
 @app.get("/api/workload-stats", response_model=WorkloadStatsResponse)
@@ -990,7 +1083,7 @@ def reallocate_workload(db: Session = Depends(get_db)):
 
 
 @app.post("/api/apply-shift")
-def apply_workload_shift(from_id: int, to_id: int, hours: int, db: Session = Depends(get_db)):
+async def apply_workload_shift(from_id: int, to_id: int, hours: int, db: Session = Depends(get_db)):
     """Dynamic DB state change: Applies an actual workload shift in SQLite."""
     from_emp = db.query(EmployeeModel).filter(EmployeeModel.id == from_id).first()
     to_emp = db.query(EmployeeModel).filter(EmployeeModel.id == to_id).first()
@@ -1012,6 +1105,28 @@ def apply_workload_shift(from_id: int, to_id: int, hours: int, db: Session = Dep
             emp.status = "Available"
 
     db.commit()
+
+    # Real-time WebSocket broadcast
+    await manager.broadcast({
+        "type": "WORKLOAD_SHIFTED",
+        "from_employee": {
+            "id": from_emp.id,
+            "name": from_emp.name,
+            "workload": from_emp.current_workload_hours,
+            "utilization_pct": round((from_emp.current_workload_hours / from_emp.max_hours) * 100, 1),
+            "status": from_emp.status
+        },
+        "to_employee": {
+            "id": to_emp.id,
+            "name": to_emp.name,
+            "workload": to_emp.current_workload_hours,
+            "utilization_pct": round((to_emp.current_workload_hours / to_emp.max_hours) * 100, 1),
+            "status": to_emp.status
+        },
+        "hours_shifted": hours,
+        "message": f"Shifted {hours}h workload from {from_emp.name} to {to_emp.name}."
+    })
+
     return {
         "success": True,
         "message": f"Successfully shifted {hours}h from {from_emp.name} to {to_emp.name} in SQLite database!",
@@ -1026,6 +1141,7 @@ def apply_workload_shift(from_id: int, to_id: int, hours: int, db: Session = Dep
             "status": to_emp.status
         }
     }
+
 
 
 @app.get("/api/skill-gaps/{project_id}", response_model=SkillGapResponse)
