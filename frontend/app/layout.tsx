@@ -27,8 +27,8 @@ export default function RootLayout({
                 Workforce Intelligence Platform (WorkforceIQ)
               </span>
             </div>
-            <span className="font-semibold">
-              Claymorphic Design • Ivory & Charcoal Black & Scarlet Blue • Multi-Page Architecture
+            <span className="font-semibold text-charcoal/60">
+              Enterprise Workforce Intelligence • Ivory, Charcoal & Scarlet Palette • Multi-Module Engine
             </span>
           </div>
         </footer>
