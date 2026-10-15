@@ -14,13 +14,21 @@ from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 # ---------------------------------------------------------
-# Database Setup (SQLite + SQLAlchemy)
+# Database Setup (SQLite + SQLAlchemy or Cloud PostgreSQL)
 # ---------------------------------------------------------
-DATABASE_URL = "sqlite:///./workforce_iq.db"
+import os
+
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./workforce_iq.db")
+
+# Handle standard postgres:// uri quirks from cloud providers (Render/Heroku/Supabase)
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+is_sqlite = DATABASE_URL.startswith("sqlite")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args={"check_same_thread": False} if is_sqlite else {}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
