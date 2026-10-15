@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { getWsUrl } from "@/lib/api";
+import { getWsUrl, API_BASE } from "@/lib/api";
 import { Radio, Bell, CheckCircle2, Flame, UserPlus, FolderPlus, ArrowRightLeft, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -61,16 +61,27 @@ export default function RealtimeNotificationCenter() {
 
         socket.onclose = () => {
           setConnected(false);
-          reconnectTimeout = setTimeout(connectWs, 3000);
+          checkHttpFallback();
+          reconnectTimeout = setTimeout(connectWs, 5000);
         };
 
         socket.onerror = () => {
           setConnected(false);
+          checkHttpFallback();
           socket.close();
         };
       } catch (err) {
-        console.error("WS connect failed", err);
-        reconnectTimeout = setTimeout(connectWs, 3000);
+        checkHttpFallback();
+        reconnectTimeout = setTimeout(connectWs, 5000);
+      }
+    }
+
+    async function checkHttpFallback() {
+      try {
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (res.ok) setConnected(true);
+      } catch {
+        // Retry
       }
     }
 
