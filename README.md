@@ -217,5 +217,16 @@ docker-compose up --build
 
 ---
 
+## 👥 Contributors & Collaborators
+
+| Contributor | GitHub Profile | Role |
+|---|---|---|
+| **Shreyas Vavley** | [@ShreyasVavley](https://github.com/ShreyasVavley) | Lead Developer & Architect |
+| **Kaviyarasan** | [@Kavi141270](https://github.com/Kavi141270) | Collaborator |
+| **Shaik Moyeen** | [@shaikmoyeen37](https://github.com/shaikmoyeen37) | Collaborator |
+| **Shashank** | [@shashank5633](https://github.com/shashank5633) | Collaborator |
+
+---
+
 ## 📄 License
 This project is open-source under the MIT License.
